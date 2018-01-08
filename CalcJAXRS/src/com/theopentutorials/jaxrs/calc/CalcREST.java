@@ -23,6 +23,12 @@ public class CalcREST {
 		return (a - b) + "";
 	}
 
+@GET
+@Produces(MediaType.TEXT_PLAIN)
+public String PlainText(@PathParam("a") double a, @PathParam("b") double b) {
+	return "plain text";
+}
+
 	@GET
 	@Path("/add/{a}/{b}")
 	@Produces(MediaType.TEXT_XML)
