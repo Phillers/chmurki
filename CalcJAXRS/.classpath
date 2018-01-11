@@ -7,13 +7,12 @@
 	<classpathentry kind="lib" path="C:/Users/filip/Downloads/jsr/jersey-archive-1.19.1/lib/jsr311-api-1.1.1.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="con" path="org.eclipse.ajdt.core.ASPECTJRT_CONTAINER"/>
-	<classpathentry kind="lib" path="C:/Users/filip/Downloads/oreilly-jaxrs-2.0-workbook/ex03_1/aspect.jar">
+	<classpathentry kind="lib" path="C:/Users/filip/OneDrive/Documents/apache-log4j-2.10.0-bin/apache-log4j-2.10.0-bin/log4j-core-2.10.0.jar"/>
+	<classpathentry kind="lib" path="C:/Users/filip/OneDrive/Documents/apache-log4j-2.10.0-bin/apache-log4j-2.10.0-bin/log4j-api-2.10.0.jar"/>
+	<classpathentry kind="lib" path="/AspectLogger/aspect.jar">
 		<attributes>
 			<attribute name="org.eclipse.ajdt.aspectpath" value="org.eclipse.ajdt.aspectpath"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="lib" path="C:/Users/filip/OneDrive/Documents/apache-log4j-2.10.0-bin/apache-log4j-2.10.0-bin/log4j-core-2.10.0.jar"/>
-	<classpathentry kind="lib" path="C:/Users/filip/OneDrive/Documents/apache-log4j-2.10.0-bin/apache-log4j-2.10.0-bin/log4j-api-2.10.0.jar"/>
-	<classpathentry kind="lib" path="C:/Users/filip/workspace2/AspectLogger/aspect.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

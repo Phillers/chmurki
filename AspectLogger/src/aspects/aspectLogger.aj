@@ -30,7 +30,7 @@ public aspect aspectLogger {
 	}
 	
 	after(Path p1, Path p2, Object targ) returning(Object x): pathBoth(p1, p2,targ){
-		System.out.println(p1.value()+" "+p2.value() +" "+ targ.hashCode() +" "+ this.hashCode() +" "+x.toString());
+		System.out.println(p1.value()+" "+p2.value() +" "+ targ.hashCode() +" "+ this.hashCode() +" "+x);
 	}
 
 	before() : getCall(){
