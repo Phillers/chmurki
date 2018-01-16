@@ -33,6 +33,8 @@ public aspect aspectLogger {
 	pointcut putCall(Object targ) : call( * *.put(..)) && target(targ);
 	pointcut deleteCall(Object targ) : call( * *.delete(..)) && target(targ);
 	
+	pointcut requestCall(Object targ) : call(* *.request(..)) && target(targ);
+	
 	before(Path x, Object targ) : pathMethod(x,targ) && getExec(){
 		System.out.println("e_id="+UUID.randomUUID());
 		System.out.println("r_id="+targ.getClass());
@@ -197,5 +199,9 @@ public aspect aspectLogger {
 	
 	before (Object targ) : deleteCall(targ){
 		System.out.println("DELETE " + targ + " " + thisJoinPoint);
+	}
+	
+	before (Object targ) : requestCall(targ){
+		System.out.println("REQUEST " + targ + " " + thisJoinPoint);
 	}
 }

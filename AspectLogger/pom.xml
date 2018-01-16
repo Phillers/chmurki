@@ -1,4 +1,5 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>pl.poznan.put.cs</groupId>
 	<artifactId>aspect-logger</artifactId>
@@ -6,10 +7,12 @@
 	<name>AspectLogger</name>
 
 	<properties>
-	    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-	    <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+		<java.source-target.version>1.8</java.source-target.version>
+		<aspectj.version>1.8.13</aspectj.version>
 	</properties>
-  
+
 	<build>
 		<pluginManagement>
 			<plugins>
@@ -18,107 +21,167 @@
 					<artifactId>maven-compiler-plugin</artifactId>
 					<version>3.7.0</version>
 					<configuration>
-						<source>1.8</source>
-						<target>1.8</target>
+						<source>${java.source-target.version}</source>
+						<target>${java.source-target.version}</target>
+						<useIncrementalCompilation>false</useIncrementalCompilation>
 					</configuration>
 				</plugin>
 				<!-- Maven plugin for resolving dependencies -->
 				<plugin>
-			        <groupId>org.apache.maven.plugins</groupId>
-			        <artifactId>maven-dependency-plugin</artifactId>
-			        <version>3.0.2</version>
-		  		</plugin>
-		  		<!-- Maven plugin for installing local third party JARs -->
-			  	<plugin>
-	  				<groupId>org.apache.maven.plugins</groupId>
-	  				<artifactId>maven-install-plugin</artifactId>
-	  				<version>2.5.1</version>
-	  				<executions>
-	  					<!-- Execution for installation of local Spex JAR -->
-	  					<execution>
-	  						<id>install-spex</id>
-	  						<phase>process-resources</phase>
-	  						<configuration>
-	  							<file>${basedir}/lib/Spex.jar</file>
-	  							<repositoryLayout>default</repositoryLayout>
-	  							<groupId>org.deckfour.code</groupId>
-	  							<artifactId>spex</artifactId>
-	  							<version>1.0</version>
-	  							<packaging>jar</packaging>
-	  							<generatePom>true</generatePom>
-	  						</configuration>
-	  						<goals>
-	  							<goal>install-file</goal>
-	  						</goals>
-	  					</execution>
-	  					<!-- Execution for installation of local OpenXES JAR -->
-	  					<execution>
-	  						<id>install-openxes</id>
-	  						<phase>process-resources</phase>
-	  						<configuration>
-	  							<file>${basedir}/lib/OpenXES-20171212.jar</file>
-	  							<repositoryLayout>default</repositoryLayout>
-	  							<groupId>org.xes-standard</groupId>
-	  							<artifactId>openxes</artifactId>
-	  							<version>2.23</version>
-	  							<packaging>jar</packaging>
-	  							<generatePom>true</generatePom>
-	  						</configuration>
-	  						<goals>
-	  							<goal>install-file</goal>
-	  						</goals>
-	  					</execution>
-	  				</executions>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-dependency-plugin</artifactId>
+					<version>3.0.2</version>
 				</plugin>
-			  	<!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself.-->
-			  	<plugin>
-			  		<groupId>org.eclipse.m2e</groupId>
-			  		<artifactId>lifecycle-mapping</artifactId>
-			  		<version>1.0.0</version>
-			  		<configuration>
-			  			<lifecycleMappingMetadata>
-			  				<pluginExecutions>
-			  					<pluginExecution>
-			  						<pluginExecutionFilter>
-			  							<groupId>
-			  								org.apache.maven.plugins
-			  							</groupId>
-			  							<artifactId>
-			  								maven-install-plugin
-			  							</artifactId>
-			  							<versionRange>
-			  								[2.5.1,)
-			  							</versionRange>
-			  							<goals>
-			  								<goal>install-file</goal>
-			  							</goals>
-			  						</pluginExecutionFilter>
-			  						<action>
-			  							<ignore></ignore>
-			  						</action>
-			  					</pluginExecution>
-			  				</pluginExecutions>
-			  			</lifecycleMappingMetadata>
-			  		</configuration>
-			  	</plugin>
+				<plugin>
+					<groupId>org.codehaus.mojo</groupId>
+					<artifactId>aspectj-maven-plugin</artifactId>
+					<version>1.11</version>
+					<configuration>
+						<!-- OPTIONAL <showWeaveInfo>true</showWeaveInfo> -->
+						<source>${java.source-target.version}</source>
+						<target>${java.source-target.version}</target>
+						<Xlint>ignore</Xlint>
+						<complianceLevel>${java.source-target.version}</complianceLevel>
+						<encoding>${project.build.sourceEncoding}</encoding>
+						<!-- OPTIONAL <verbose>true</verbose> -->
+						<!-- OPTIONAL <warn> constructorName, packageDefaultMethod, deprecation, 
+							maskedCatchBlocks, unusedLocals, unusedArguments, unusedImport </warn> -->
+					</configuration>
+					<executions>
+						<execution>
+						<?m2e execute onConfiguration?>
+							<!-- IMPORTANT -->
+							<phase>process-sources</phase>
+							<goals>
+								<goal>compile</goal>
+								<goal>test-compile</goal>
+							</goals>
+						</execution>
+					</executions>
+					<dependencies>
+						<dependency>
+							<groupId>org.aspectj</groupId>
+							<artifactId>aspectjtools</artifactId>
+							<version>${aspectj.version}</version>
+						</dependency>
+					</dependencies>
+				</plugin>
+				<!-- Maven plugin for installing local third party JARs -->
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-install-plugin</artifactId>
+					<version>2.5.1</version>
+					<executions>
+						<!-- Execution for installation of local Spex JAR -->
+						<execution>
+							<id>install-spex</id>
+							<phase>process-resources</phase>
+							<configuration>
+								<file>${basedir}/lib/Spex.jar</file>
+								<repositoryLayout>default</repositoryLayout>
+								<groupId>org.deckfour.code</groupId>
+								<artifactId>spex</artifactId>
+								<version>1.0</version>
+								<packaging>jar</packaging>
+								<generatePom>true</generatePom>
+							</configuration>
+							<goals>
+								<goal>install-file</goal>
+							</goals>
+						</execution>
+						<!-- Execution for installation of local OpenXES JAR -->
+						<execution>
+							<id>install-openxes</id>
+							<phase>process-resources</phase>
+							<configuration>
+								<file>${basedir}/lib/OpenXES-20171212.jar</file>
+								<repositoryLayout>default</repositoryLayout>
+								<groupId>org.xes-standard</groupId>
+								<artifactId>openxes</artifactId>
+								<version>2.23</version>
+								<packaging>jar</packaging>
+								<generatePom>true</generatePom>
+							</configuration>
+							<goals>
+								<goal>install-file</goal>
+							</goals>
+						</execution>
+					</executions>
+				</plugin>
+				<!--This plugin's configuration is used to store Eclipse m2e settings 
+					only. It has no influence on the Maven build itself. -->
+				<plugin>
+					<groupId>org.eclipse.m2e</groupId>
+					<artifactId>lifecycle-mapping</artifactId>
+					<version>1.0.0</version>
+					<configuration>
+						<lifecycleMappingMetadata>
+							<pluginExecutions>
+								<pluginExecution>
+									<pluginExecutionFilter>
+										<groupId>
+											org.apache.maven.plugins
+										</groupId>
+										<artifactId>
+											maven-install-plugin
+										</artifactId>
+										<versionRange>
+											[2.5.1,)
+										</versionRange>
+										<goals>
+											<goal>install-file</goal>
+										</goals>
+									</pluginExecutionFilter>
+									<action>
+										<ignore></ignore>
+									</action>
+								</pluginExecution>
+							</pluginExecutions>
+						</lifecycleMappingMetadata>
+					</configuration>
+				</plugin>
 			</plugins>
 		</pluginManagement>
+		<plugins>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>aspectj-maven-plugin</artifactId>
+			</plugin>
+			<!-- OPTIONAL -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+			</plugin>
+			<!-- -->
+		</plugins>
 	</build>
-  
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>org.aspectj</groupId>
+				<artifactId>aspectjrt</artifactId>
+				<version>${aspectj.version}</version>
+				<scope>runtime</scope>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
 	<dependencies>
 		<!-- Public repository dependencies -->
 		<!-- JAX-RS 2.1 (JSR339) specification API -->
 		<dependency>
-		    <groupId>javax.ws.rs</groupId>
-		    <artifactId>javax.ws.rs-api</artifactId>
-		    <version>2.1</version>
+			<groupId>javax.ws.rs</groupId>
+			<artifactId>javax.ws.rs-api</artifactId>
+			<version>2.1</version>
 		</dependency>
 		<!-- Guava - Google Core Libraries for Java -->
 		<dependency>
-		    <groupId>com.google.guava</groupId>
-		    <artifactId>guava</artifactId>
-		    <version>23.6-jre</version>
+			<groupId>com.google.guava</groupId>
+			<artifactId>guava</artifactId>
+			<version>23.6-jre</version>
+		</dependency>
+		<dependency>
+			<groupId>org.aspectj</groupId>
+			<artifactId>aspectjrt</artifactId>
 		</dependency>
 	</dependencies>
-  
 </project>
