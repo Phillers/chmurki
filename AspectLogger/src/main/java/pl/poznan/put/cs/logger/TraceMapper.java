@@ -11,12 +11,12 @@ import org.deckfour.xes.model.impl.XAttributeMapImpl;
 import org.deckfour.xes.model.impl.XEventImpl;
 import org.deckfour.xes.model.impl.XTraceImpl;
 
-public class Mapper {
+class TraceMapper {
 	private XTrace trace;
 	private Map<Integer, XEvent> eventMap;
 	private int uniqueId;
 	
-	public Mapper() {
+	public TraceMapper() {
 		this.trace = new XTraceImpl(new XAttributeMapImpl());
 		this.eventMap = new HashMap<Integer, XEvent>();
 		this.uniqueId = 0;
