@@ -58,7 +58,7 @@ class LogMapper {
 		OutputStream outputStream = null;
 		
 		try {
-			outputStream = new FileOutputStream(outputFileName);
+			outputStream = new FileOutputStream(outputFileName + ".xes");
 			serializer.serialize(this.log, outputStream);
 		} catch (FileNotFoundException fileNotFoundException) {
 			System.err.println("Can't create file for output log: " + fileNotFoundException.getMessage());
@@ -70,7 +70,7 @@ class LogMapper {
 	private TraceMapper getTraceMapper(Integer traceId) {
 		TraceMapper traceMapper = this.traceMappers.get(traceId);
 		if (traceMapper == null) {
-			traceMapper = new TraceMapper();
+			traceMapper = new TraceMapper(this.log);
 			this.traceMappers.put(traceId, traceMapper);
 		}
 		return traceMapper;

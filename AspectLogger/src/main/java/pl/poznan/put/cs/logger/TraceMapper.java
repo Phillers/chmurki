@@ -5,6 +5,7 @@ import java.util.Map;
 
 import org.deckfour.xes.model.XAttributeMap;
 import org.deckfour.xes.model.XEvent;
+import org.deckfour.xes.model.XLog;
 import org.deckfour.xes.model.XTrace;
 import org.deckfour.xes.model.impl.XAttributeLiteralImpl;
 import org.deckfour.xes.model.impl.XAttributeMapImpl;
@@ -16,8 +17,9 @@ class TraceMapper {
 	private Map<Integer, XEvent> eventMap;
 	private int uniqueId;
 	
-	public TraceMapper() {
+	public TraceMapper(XLog log) {
 		this.trace = new XTraceImpl(new XAttributeMapImpl());
+		log.add(this.trace);
 		this.eventMap = new HashMap<Integer, XEvent>();
 		this.uniqueId = 0;
 	}
@@ -43,6 +45,7 @@ class TraceMapper {
 		XEvent event = this.eventMap.get(eventId);
 		if (event == null) {
 			event = new XEventImpl(new XAttributeMapImpl());
+			trace.add(event);
 			this.eventMap.put(eventId, event);
 		}
 		return event;
