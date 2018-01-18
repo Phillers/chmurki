@@ -44,6 +44,17 @@ public class Logger {
 		}
 	}
 	
+	public void serializeLog(Integer logId, String outputFileName) {
+		LogMapper logMapper = this.getLogMapper(logId);
+		logMapper.serializeLog(outputFileName);
+	}
+	
+	public void serializeAll(String baseOutputFileName) {
+		for (Integer key : this.logMappers.keySet()) {
+			serializeLog(key, baseOutputFileName + key);
+		}
+	}
+	
 	private LogMapper getLogMapper(Integer logId) {
 		LogMapper logMapper = this.logMappers.get(logId);
 		if (logMapper == null) {
@@ -52,4 +63,6 @@ public class Logger {
 		}
 		return logMapper;
 	}
+	
+	
 }
