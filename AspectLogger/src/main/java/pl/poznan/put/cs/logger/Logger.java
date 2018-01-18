@@ -1,83 +1,68 @@
 package pl.poznan.put.cs.logger;
 
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.deckfour.xes.model.XLog;
-import org.deckfour.xes.model.impl.XAttributeMapImpl;
-import org.deckfour.xes.model.impl.XLogImpl;
-import org.deckfour.xes.out.XesXmlSerializer;
-
 public class Logger {
-	private XLog log;
-	private Map<Integer, Mapper> mappers;
-	private int uniqueId;
-	
-	
-	public enum AttributeTypes {
-		STRING("LITERAL");
-		
-		private String attributeType;
-		
-		AttributeTypes(String attributeType) {
-			this.attributeType = attributeType;
-		}
-	}
+	private Map<Integer, LogMapper> logMappers;
+	int uniqueId;
 	
 	public Logger() {
-		this.log = new XLogImpl(new XAttributeMapImpl());
-		this.mappers = new HashMap<Integer, Mapper>();
-		this.uniqueId = 0;
+		this.logMappers = new HashMap<Integer, LogMapper>();
 	}
 	
-	public Integer getNewTraceId() {
+	public Integer getNewLogId() {
 		return this.uniqueId++;
 	}
 	
-	public Integer getNewEventId(Integer traceId) {
-		Mapper mapper = this.getMapper(traceId);
-		return mapper.getNewEventId();
+	public Integer getNewTraceId(Integer logId) {
+		LogMapper logMapper = this.getLogMapper(logId);
+		return logMapper.getNewTraceId();
 	}
 	
-	public void log(Integer traceId, String key, String value) {
-		log(traceId, null, key, value);
+	public Integer getNewEventId(Integer logId, Integer traceId) {
+		LogMapper logMapper = this.getLogMapper(logId);
+		return logMapper.getNewEventId(traceId);
 	}
 	
-	public void log(Integer traceId, Integer eventId, String key, String value) {
-		Mapper mapper = this.getMapper(traceId);
-		if (eventId == null) {
-			mapper.log(key, value);
+	public void log(Integer logId, String key, String value) {
+		log(logId, null, null, key, value);
+	}
+	
+	public void log(Integer logId, Integer traceId, String key, String value) {
+		log(logId, traceId, null, key, value);
+	}
+	
+	public void log(Integer logId, Integer traceId, Integer eventId, String key, String value) {
+		LogMapper logMapper = this.getLogMapper(logId);
+		if (traceId == null) {
+			logMapper.log(key, value);
+		} else if (eventId == null) {
+			logMapper.log(traceId, key, value);
 		} else {
-			mapper.log(eventId, key, value);
+			logMapper.log(traceId, eventId, key, value);
 		}
 	}
 	
-	public void serializeLog(String outputFileName) {
-		XesXmlSerializer serializer = new XesXmlSerializer();
-		OutputStream outputStream = null;
-		
-		try {
-			outputStream = new FileOutputStream(outputFileName);
-			serializer.serialize(this.log, outputStream);
-		} catch (FileNotFoundException fileNotFoundException) {
-			System.err.println("Can't create file for output log: " + fileNotFoundException.getMessage());
-		} catch (IOException ioException) {
-			System.err.println("Can't serialize output log to file: " + ioException.getMessage());
+	public void serializeLog(Integer logId, String outputFileName) {
+		LogMapper logMapper = this.getLogMapper(logId);
+		logMapper.serializeLog(outputFileName);
+	}
+	
+	public void serializeAll(String baseOutputFileName) {
+		for (Integer key : this.logMappers.keySet()) {
+			serializeLog(key, baseOutputFileName + key);
 		}
 	}
 	
-	private Mapper getMapper(Integer traceId) {
-		Mapper mapper = this.mappers.get(traceId);
-		if (mapper == null) {
-			mapper = new Mapper();
-			this.mappers.put(traceId, mapper);
+	private LogMapper getLogMapper(Integer logId) {
+		LogMapper logMapper = this.logMappers.get(logId);
+		if (logMapper == null) {
+			logMapper = new LogMapper();
+			this.logMappers.put(logId, logMapper);
 		}
-		return mapper;
+		return logMapper;
 	}
+	
+	
 }
-
-
