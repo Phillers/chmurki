@@ -1,5 +1,7 @@
 package pl.poznan.put.cs.aspects;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.UUID;
 
@@ -8,16 +10,11 @@ import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
-
 import javax.ws.rs.Path;
 import javax.ws.rs.client.Invocation;
-import javax.ws.rs.client.SyncInvoker;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
-
-import org.aspectj.lang.reflect.MethodSignature;
 
 import pl.poznan.put.cs.logger.EventKey;
 import pl.poznan.put.cs.logger.LogKey;
@@ -37,7 +34,7 @@ import java.util.UUID;
 import javax.ws.rs.DELETE;
 
 public aspect aspectLogger {
-
+	
 	private Logger logger;
 	private static final int MAIN_LOG_ID = 0;
 	long c_id = 0;
@@ -46,7 +43,7 @@ public aspect aspectLogger {
 		String address;
 		int c_id;
 		HashMap<Integer, String> c_address;
-
+		int instanceNo;
 		Properties() {
 			c_address = new HashMap<>();
 		}
@@ -56,12 +53,14 @@ public aspect aspectLogger {
 	private int activeConnections = 0;
 	private int loggedTraces = 0;
 	private int tracesPerFile = 2;
-	
+	private SimpleDateFormat sdf;
 	aspectLogger() {
 		this.logger = new Logger();
 		propertiesMap = new HashMap<Integer, Properties>();
+		sdf=new SimpleDateFormat("yyyy-MM-dd;HH:mm:ss:SSS");
 	}
 
+		
 	pointcut pathClass(Path x):  @within(x);// && !@annotation(Path);
 	// pointcut pathBoth(Path p1, Path p2): @annotation(p1) && @within(p2);
 
@@ -85,7 +84,7 @@ public aspect aspectLogger {
 
 	pointcut callFunction(Path p, Object o) : call(Response *.*(..)) && @within(p) &&this(o);
 
-	pointcut syncInvokerCall(Path p, Object o) : call(Response *.*(..)) && @within(p) &&this(o) &&target(SyncInvoker);
+	pointcut syncInvokerCall(Path p, Object o) : call(Response *.*(..)) && @within(p) &&this(o) && (target(Invocation.Builder) || target(Invocation));
 
 	pointcut requestCall(WebTarget targ, Path p) : call(* *.request(..)) && target(targ) && @within(p);
 
@@ -137,16 +136,21 @@ public aspect aspectLogger {
 	Response around(Path p, Object o)  : syncInvokerCall(p,o) {
 		int l_p_id = o.hashCode();
 		Date time1 = new Date();
-		MethodSignature sign = thisJoinPoint.getSignature();
 
 		Response response = proceed(p, o);
 
 		Date time2 = new Date();
 		String r_p_id = response.getHeaderString("al_p_id");
 		String c_id = response.getHeaderString("al_c_id");
-		System.out.println(response);
-		int c_id_int = new Integer(c_id);
+		
 		Properties props = propertiesMap.get(l_p_id);
+		int c_id_int;
+		if(c_id!=null){
+			c_id_int = new Integer(c_id);
+		}else{
+				c_id_int=props.c_id;
+		}
+		
 		String r_address = props.c_address.get(c_id_int);
 		logEvent(o, "" + thisJoinPoint, r_p_id, props.address, r_address, c_id, time1);
 
@@ -155,48 +159,54 @@ public aspect aspectLogger {
 	}
 
 	void logEvent(Object target, String a_id, String r_p_id, String source, String dest, String c_id, Date time) {
-		System.out.println("r_id=" + target.getClass());
+		System.out.println("r_id=" + target.getClass().getName());
 		System.out.println("a_id=" + a_id);
 		System.out.println("l_p_id=" + target.hashCode());
 		System.out.println("r_p_id=" + r_p_id);
 		System.out.println("source=" + source);
 		System.out.println("destination=" + dest);
 		System.out.println("c_id=" + c_id);
-		System.out.println("time=" + time);
+		System.out.println("time=" + sdf.format(time));
 		System.out.println("*************************************************");
-		logEventUsingLogger( target,  a_id,  r_p_id,  source,  dest, c_id);
+//		logEventUsingLogger( target,  a_id,  r_p_id,  source,  dest, c_id,time);
 	}
 
 	void logEvent(Object target, String a_id) {
-		System.out.println("r_id=" + target.getClass());
+		System.out.println("r_id=" + target.getClass().getName());
 		System.out.println("a_id=" + a_id);
 		System.out.println("l_p_id=" + target.hashCode());
-		System.out.println("time=" + new Date());
+		System.out.println("time=" + sdf.format(new Date()));
 		System.out.println("*************************************************");
-		logEventUsingLogger(target,  a_id);
+//		logEventUsingLogger(target,  a_id);
 	}
 
 	private void logEventUsingLogger(Object target, String a_id) {
-		logEventUsingLogger(target, a_id, null, null, null, null);
+		logEventUsingLogger(target, a_id, null, null, null, null, new Date());
 	}
 
-	private void logEventUsingLogger(Object target, String a_id, String l_p_id, String source, String destination,
-			String c_id) {
+	private void logEventUsingLogger(Object target, String a_id, String r_p_id, String source, String destination,
+			String c_id, Date time) {
+		String r_id = target.getClass().getName();
+		Integer l_p_id = target.hashCode();
+		
 		LogKey logKey = new LogKey(MAIN_LOG_ID);
-		TraceKey traceKey = new TraceKey(target.getClass().getName(), target.hashCode());
+		TraceKey traceKey = new TraceKey(r_id, l_p_id);
 		Integer eventId = logger.getNewEventID(logKey, traceKey);
 		EventKey eventKey = new EventKey(eventId);
 
 		this.logger.log(logKey, traceKey, eventKey, "e_id", eventId.toString());
 		this.logger.log(logKey, traceKey, eventKey, "r_id", target.getClass().getName());
 		this.logger.log(logKey, traceKey, eventKey, "a_id", a_id);
+		this.logger.log(logKey, traceKey, eventKey, "l_p_id", l_p_id.toString());
 
-		if (l_p_id != null) {
-			this.logger.log(logKey, traceKey, eventKey, "l_p_id", l_p_id);
+		if (r_p_id != null) {
+			this.logger.log(logKey, traceKey, eventKey, "r_p_id", r_p_id);
 			this.logger.log(logKey, traceKey, eventKey, "source", source);
 			this.logger.log(logKey, traceKey, eventKey, "destination", destination);
 			this.logger.log(logKey, traceKey, eventKey, "c_id", c_id);
 		}
+		
+		this.logger.log(logKey, traceKey, eventKey, "time", time.toString());
 	}
 
 	protected void finalize() {
