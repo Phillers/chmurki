@@ -146,11 +146,13 @@
 	</build>
 	<dependencies>
 		<!-- Local dependencies -->
+		<!-- OpenXES - serialization library for XES log format -->
 		<dependency>
 			<groupId>org.xes-standard</groupId>
 			<artifactId>openxes</artifactId>
 			<version>2.23</version>
 		</dependency>
+		<!-- Spex XML serialization library (used by OpenXES -->
 		<dependency>
 			<groupId>org.deckfour.code</groupId>
 			<artifactId>spex</artifactId>
@@ -181,6 +183,7 @@
 		    <artifactId>commons-lang3</artifactId>
 		    <version>3.6</version>
 		</dependency>
+		<!-- JavaX servlet api -->
 		<dependency>
 			<groupId>javax.servlet</groupId>
 			<artifactId>servlet-api</artifactId>

@@ -4,62 +4,47 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class Logger {
-	private Map<Integer, LogMapper> logMappers;
-	int uniqueId;
+	private Map<LogKey, LogMapper> logMappers;
 	
 	public Logger() {
-		this.logMappers = new HashMap<Integer, LogMapper>();
+		this.logMappers = new HashMap<LogKey, LogMapper>();
 	}
 	
-	public Integer getNewLogId() {
-		return this.uniqueId++;
+	public void log(LogKey logKey, String key, String value) {
+		log(logKey, null, null, key, value);
 	}
 	
-	public Integer getNewTraceId(Integer logId) {
-		LogMapper logMapper = this.getLogMapper(logId);
-		return logMapper.getNewTraceId();
+	public void log(LogKey logKey, TraceKey traceKey, String key, String value) {
+		log(logKey, traceKey, null, key, value);
 	}
 	
-	public Integer getNewEventId(Integer logId, Integer traceId) {
-		LogMapper logMapper = this.getLogMapper(logId);
-		return logMapper.getNewEventId(traceId);
-	}
-	
-	public void log(Integer logId, String key, String value) {
-		log(logId, null, null, key, value);
-	}
-	
-	public void log(Integer logId, Integer traceId, String key, String value) {
-		log(logId, traceId, null, key, value);
-	}
-	
-	public void log(Integer logId, Integer traceId, Integer eventId, String key, String value) {
-		LogMapper logMapper = this.getLogMapper(logId);
-		if (traceId == null) {
+	public void log(LogKey logKey, TraceKey traceKey, EventKey eventKey, String key, String value) {
+		LogMapper logMapper = this.getLogMapper(logKey);
+		if (traceKey == null) {
 			logMapper.log(key, value);
-		} else if (eventId == null) {
-			logMapper.log(traceId, key, value);
+		} else if (eventKey == null) {
+			logMapper.log(traceKey, key, value);
 		} else {
-			logMapper.log(traceId, eventId, key, value);
+			logMapper.log(traceKey, eventKey, key, value);
 		}
 	}
 	
-	public void serializeLog(Integer logId, String outputFileName) {
-		LogMapper logMapper = this.getLogMapper(logId);
+	public void serializeLog(LogKey logKey, String outputFileName) {
+		LogMapper logMapper = this.getLogMapper(logKey);
 		logMapper.serializeLog(outputFileName);
 	}
 	
 	public void serializeAll(String baseOutputFileName) {
-		for (Integer key : this.logMappers.keySet()) {
+		for (LogKey key : this.logMappers.keySet()) {
 			serializeLog(key, baseOutputFileName + key);
 		}
 	}
 	
-	private LogMapper getLogMapper(Integer logId) {
-		LogMapper logMapper = this.logMappers.get(logId);
+	private LogMapper getLogMapper(LogKey logKey) {
+		LogMapper logMapper = this.logMappers.get(logKey);
 		if (logMapper == null) {
 			logMapper = new LogMapper();
-			this.logMappers.put(logId, logMapper);
+			this.logMappers.put(logKey, logMapper);
 		}
 		return logMapper;
 	}

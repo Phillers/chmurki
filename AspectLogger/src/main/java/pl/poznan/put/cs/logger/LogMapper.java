@@ -16,22 +16,11 @@ import org.deckfour.xes.out.XesXmlSerializer;
 
 class LogMapper {
 	private XLog log;
-	private Map<Integer, TraceMapper> traceMappers;
-	private int uniqueId;
+	private Map<TraceKey, TraceMapper> traceMappers;
 	
 	public LogMapper() {
 		this.log = new XLogImpl(new XAttributeMapImpl());
-		this.traceMappers = new HashMap<Integer, TraceMapper>();
-		this.uniqueId = 0;
-	}
-	
-	public Integer getNewTraceId() {
-		return this.uniqueId++;
-	}
-	
-	public Integer getNewEventId(Integer traceId) {
-		TraceMapper traceMapper = this.getTraceMapper(traceId);
-		return traceMapper.getNewEventId();
+		this.traceMappers = new HashMap<TraceKey, TraceMapper>();
 	}
 	
 	public void log(String key, String value) {
@@ -40,11 +29,11 @@ class LogMapper {
 		this.log.setAttributes(attributes);
 	}
 	
-	public void log(Integer traceId, String key, String value) {
+	public void log(TraceKey traceId, String key, String value) {
 		log(traceId, null, key, value);
 	}
 	
-	public void log(Integer traceId, Integer eventId, String key, String value) {
+	public void log(TraceKey traceId, EventKey eventId, String key, String value) {
 		TraceMapper traceMapper = this.getTraceMapper(traceId);
 		if (eventId == null) {
 			traceMapper.log(key, value);
@@ -67,7 +56,7 @@ class LogMapper {
 		}
 	}
 	
-	private TraceMapper getTraceMapper(Integer traceId) {
+	private TraceMapper getTraceMapper(TraceKey traceId) {
 		TraceMapper traceMapper = this.traceMappers.get(traceId);
 		if (traceMapper == null) {
 			traceMapper = new TraceMapper(this.log);

@@ -5,14 +5,14 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 
 
-public final class LoggedEntityKey {
+public final class TraceKey {
+	private static final int HASHCODE_PRIME1 = 113;
+	private static final int HASHCODE_PRIME2 = 211;
+	
 	private final String r_id;
 	private final int l_p_id;
 	
-	private final int HASHCODE_PRIME1 = 113;
-	private final int HASHCODE_PRIME2 = 211;
-	
-	public LoggedEntityKey(String r_id, int l_p_id) {
+	public TraceKey(String r_id, int l_p_id) {
 		this.r_id = r_id;
 		this.l_p_id = l_p_id;
 	}
@@ -27,14 +27,14 @@ public final class LoggedEntityKey {
 	
 	@Override
 	public boolean equals(Object object) {
-		if (!(object instanceof LoggedEntityKey)) {
+		if (!(object instanceof TraceKey)) {
 			return false;
 		}
 		if (object == this) {
 			return true;
 		}
 		
-		LoggedEntityKey rhs = (LoggedEntityKey) object;
+		TraceKey rhs = (TraceKey) object;
 		return new EqualsBuilder()
 				.append(r_id, rhs.r_id)
 				.append(l_p_id, rhs.l_p_id)
