@@ -16,21 +16,15 @@ import org.deckfour.xes.out.XesXmlSerializer;
 
 class LogMapper {
 	private XLog log;
-	private Map<Integer, TraceMapper> traceMappers;
-	private int uniqueId;
+	private Map<TraceKey, TraceMapper> traceMappers;
 	
 	public LogMapper() {
 		this.log = new XLogImpl(new XAttributeMapImpl());
-		this.traceMappers = new HashMap<Integer, TraceMapper>();
-		this.uniqueId = 0;
+		this.traceMappers = new HashMap<TraceKey, TraceMapper>();
 	}
 	
-	public Integer getNewTraceId() {
-		return this.uniqueId++;
-	}
-	
-	public Integer getNewEventId(Integer traceId) {
-		TraceMapper traceMapper = this.getTraceMapper(traceId);
+	public int getNewEventId(TraceKey traceKey) {
+		TraceMapper traceMapper = this.getTraceMapper(traceKey);
 		return traceMapper.getNewEventId();
 	}
 	
@@ -40,16 +34,16 @@ class LogMapper {
 		this.log.setAttributes(attributes);
 	}
 	
-	public void log(Integer traceId, String key, String value) {
-		log(traceId, null, key, value);
+	public void log(TraceKey traceKey, String key, String value) {
+		log(traceKey, null, key, value);
 	}
 	
-	public void log(Integer traceId, Integer eventId, String key, String value) {
-		TraceMapper traceMapper = this.getTraceMapper(traceId);
-		if (eventId == null) {
+	public void log(TraceKey traceKey, EventKey eventKey, String key, String value) {
+		TraceMapper traceMapper = this.getTraceMapper(traceKey);
+		if (eventKey == null) {
 			traceMapper.log(key, value);
 		} else {
-			traceMapper.log(eventId, key, value);
+			traceMapper.log(eventKey, key, value);
 		}
 	}
 	
@@ -67,11 +61,11 @@ class LogMapper {
 		}
 	}
 	
-	private TraceMapper getTraceMapper(Integer traceId) {
-		TraceMapper traceMapper = this.traceMappers.get(traceId);
+	private TraceMapper getTraceMapper(TraceKey traceKey) {
+		TraceMapper traceMapper = this.traceMappers.get(traceKey);
 		if (traceMapper == null) {
 			traceMapper = new TraceMapper(this.log);
-			this.traceMappers.put(traceId, traceMapper);
+			this.traceMappers.put(traceKey, traceMapper);
 		}
 		return traceMapper;
 	}

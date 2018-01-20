@@ -13,3 +13,8 @@ local.properties
 
 # Maven
 /target/
+
+# AspectLogger specific
+.jar
+*.xes
+

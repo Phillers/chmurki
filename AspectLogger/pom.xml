@@ -32,6 +32,7 @@
 					<artifactId>maven-dependency-plugin</artifactId>
 					<version>3.0.2</version>
 				</plugin>
+				<!-- Maven plugin for enabling AspectJ -->
 				<plugin>
 					<groupId>org.codehaus.mojo</groupId>
 					<artifactId>aspectj-maven-plugin</artifactId>
@@ -142,36 +143,16 @@
 				</plugin>
 			</plugins>
 		</pluginManagement>
-		<plugins>
-			<plugin>
-				<groupId>org.codehaus.mojo</groupId>
-				<artifactId>aspectj-maven-plugin</artifactId>
-			</plugin>
-			<!-- OPTIONAL -->
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-compiler-plugin</artifactId>
-			</plugin>
-			<!-- -->
-		</plugins>
 	</build>
-	<dependencyManagement>
-		<dependencies>
-			<dependency>
-				<groupId>org.aspectj</groupId>
-				<artifactId>aspectjrt</artifactId>
-				<version>${aspectj.version}</version>
-				<scope>runtime</scope>
-			</dependency>
-		</dependencies>
-	</dependencyManagement>
 	<dependencies>
 		<!-- Local dependencies -->
+		<!-- OpenXES - serialization library for XES log format -->
 		<dependency>
 			<groupId>org.xes-standard</groupId>
 			<artifactId>openxes</artifactId>
 			<version>2.23</version>
 		</dependency>
+		<!-- Spex XML serialization library (used by OpenXES -->
 		<dependency>
 			<groupId>org.deckfour.code</groupId>
 			<artifactId>spex</artifactId>
@@ -190,10 +171,19 @@
 			<artifactId>guava</artifactId>
 			<version>23.6-jre</version>
 		</dependency>
+		<!-- AspectJ runtime -->
 		<dependency>
 			<groupId>org.aspectj</groupId>
 			<artifactId>aspectjrt</artifactId>
+			<version>${aspectj.version}</version>
 		</dependency>
+		<!-- Apache Commons Lang library -->
+		<dependency>
+		    <groupId>org.apache.commons</groupId>
+		    <artifactId>commons-lang3</artifactId>
+		    <version>3.6</version>
+		</dependency>
+		<!-- JavaX servlet api -->
 		<dependency>
 			<groupId>javax.servlet</groupId>
 			<artifactId>servlet-api</artifactId>
