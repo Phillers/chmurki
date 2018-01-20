@@ -1,5 +1,6 @@
 package pl.poznan.put.cs.aspects;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.UUID;
 
@@ -10,29 +11,14 @@ import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.client.Invocation;
-import javax.ws.rs.client.SyncInvoker;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 
 import pl.poznan.put.cs.logger.EventKey;
 import pl.poznan.put.cs.logger.LogKey;
 import pl.poznan.put.cs.logger.Logger;
 import pl.poznan.put.cs.logger.TraceKey;
-
-
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-
-import java.util.Date;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
-
-import javax.ws.rs.DELETE;
 
 public aspect aspectLogger {
 	
@@ -190,25 +176,32 @@ public aspect aspectLogger {
 		System.out.println("*************************************************");
 		}
 	private void logEventUsingLogger(Object target, String a_id) {
-		logEventUsingLogger(target, a_id, null, null, null, null);
+		logEventUsingLogger(target, a_id, null, null, null, null, new Date());
 	}
 	
-	private void logEventUsingLogger(Object target, String a_id, String l_p_id, String source, String destination, String c_id) {
+	private void logEventUsingLogger(Object target, String a_id, String r_p_id, String source, String destination,
+			String c_id, Date time) {
+		String r_id = target.getClass().getName();
+		Integer l_p_id = target.hashCode();
+		
 		LogKey logKey = new LogKey(MAIN_LOG_ID);
-		TraceKey traceKey = new TraceKey(target.getClass().getName(), target.hashCode());
+		TraceKey traceKey = new TraceKey(r_id, l_p_id);
 		Integer eventId = logger.getNewEventID(logKey, traceKey);
 		EventKey eventKey = new EventKey(eventId);
 		
 		this.logger.log(logKey, traceKey, eventKey, "e_id", eventId.toString());
 		this.logger.log(logKey, traceKey, eventKey, "r_id", target.getClass().getName());
 		this.logger.log(logKey, traceKey, eventKey, "a_id", a_id);
+		this.logger.log(logKey, traceKey, eventKey, "l_p_id", l_p_id.toString());
 		
-		if (l_p_id != null) {
-			this.logger.log(logKey, traceKey, eventKey, "l_p_id", l_p_id);
+		if (r_p_id != null) {
+			this.logger.log(logKey, traceKey, eventKey, "r_p_id", r_p_id);
 			this.logger.log(logKey, traceKey, eventKey, "source", source);
 			this.logger.log(logKey, traceKey, eventKey, "destination", destination);
 			this.logger.log(logKey, traceKey, eventKey, "c_id", c_id);
 		}
+		
+		this.logger.log(logKey, traceKey, eventKey, "time", time.toString());
 	}
 	
 }
