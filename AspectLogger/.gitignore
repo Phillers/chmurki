@@ -15,5 +15,6 @@ local.properties
 /target/
 
 # AspectLogger specific
+.jar
 *.xes
 

@@ -3,7 +3,7 @@ package pl.poznan.put.cs.logger;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
-public class LogKey {
+public final class LogKey {
 	private static final int HASHCODE_PRIME1 = 191;
 	private static final int HASHCODE_PRIME2 = 11;
 

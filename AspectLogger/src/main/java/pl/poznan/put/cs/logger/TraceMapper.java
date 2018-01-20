@@ -15,11 +15,17 @@ import org.deckfour.xes.model.impl.XTraceImpl;
 class TraceMapper {
 	private XTrace trace;
 	private Map<EventKey, XEvent> eventMap;
+	private int uniqueId;
 	
 	public TraceMapper(XLog log) {
 		this.trace = new XTraceImpl(new XAttributeMapImpl());
 		log.add(this.trace);
 		this.eventMap = new HashMap<EventKey, XEvent>();
+		this.uniqueId = 0;
+	}
+	
+	public int getNewEventId() {
+		return this.uniqueId++;
 	}
 	
 	public void log(String key, String value) {
@@ -28,19 +34,19 @@ class TraceMapper {
 		this.trace.setAttributes(attributeMap);
 	}
 	
-	public void log(EventKey eventId, String key, String value) {
-		XEvent event = this.getEvent(eventId);
+	public void log(EventKey eventKey, String key, String value) {
+		XEvent event = this.getEvent(eventKey);
 		XAttributeMap attributeMap = event.getAttributes();
 		attributeMap.put(key, new XAttributeLiteralImpl(key, value));
 		event.setAttributes(attributeMap);
 	}
 	
-	private XEvent getEvent(EventKey eventId) {
-		XEvent event = this.eventMap.get(eventId);
+	private XEvent getEvent(EventKey eventKey) {
+		XEvent event = this.eventMap.get(eventKey);
 		if (event == null) {
 			event = new XEventImpl(new XAttributeMapImpl());
 			trace.add(event);
-			this.eventMap.put(eventId, event);
+			this.eventMap.put(eventKey, event);
 		}
 		return event;
 	}

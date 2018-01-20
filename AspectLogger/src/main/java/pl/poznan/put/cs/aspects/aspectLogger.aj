@@ -1,31 +1,30 @@
 package pl.poznan.put.cs.aspects;
 
-import pl.poznan.put.cs.logger.Logger;
+import java.util.HashMap;
+import java.util.UUID;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.client.Invocation;
 import javax.ws.rs.client.WebTarget;
-
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 
-import org.aspectj.lang.ProceedingJoinPoint;
+import pl.poznan.put.cs.logger.EventKey;
+import pl.poznan.put.cs.logger.LogKey;
+import pl.poznan.put.cs.logger.Logger;
+import pl.poznan.put.cs.logger.TraceKey;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
-
-import javax.ws.rs.DELETE;
 
 public aspect aspectLogger {
 	
 	private Logger logger;
+	private static final int MAIN_LOG_ID = 0;
 	long c_id=0;
 	
 	private class Properties{
@@ -128,8 +127,22 @@ public aspect aspectLogger {
 		logEventUsingLogger(target, a_id, null, null, null, null);
 	}
 	
-	private void logEventUsingLogger(Object target, String a_id, String r_p_id, String source, String dest, String c_id) {
+	private void logEventUsingLogger(Object target, String a_id, String l_p_id, String source, String destination, String c_id) {
+		LogKey logKey = new LogKey(MAIN_LOG_ID);
+		TraceKey traceKey = new TraceKey(target.getClass().getName(), target.hashCode());
+		Integer eventId = logger.getNewEventID(logKey, traceKey);
+		EventKey eventKey = new EventKey(eventId);
 		
+		this.logger.log(logKey, traceKey, eventKey, "e_id", eventId.toString());
+		this.logger.log(logKey, traceKey, eventKey, "r_id", target.getClass().getName());
+		this.logger.log(logKey, traceKey, eventKey, "a_id", a_id);
+		
+		if (l_p_id != null) {
+			this.logger.log(logKey, traceKey, eventKey, "l_p_id", l_p_id);
+			this.logger.log(logKey, traceKey, eventKey, "source", source);
+			this.logger.log(logKey, traceKey, eventKey, "destination", destination);
+			this.logger.log(logKey, traceKey, eventKey, "c_id", c_id);
+		}
 	}
 	
 }

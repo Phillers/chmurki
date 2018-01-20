@@ -3,7 +3,7 @@ package pl.poznan.put.cs.logger;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
-public class EventKey {
+public final class EventKey {
 	private static final int HASHCODE_PRIME1 = 37;
 	private static final int HASHCODE_PRIME2 = 199;
 

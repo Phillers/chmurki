@@ -10,6 +10,11 @@ public class Logger {
 		this.logMappers = new HashMap<LogKey, LogMapper>();
 	}
 	
+	public int getNewEventID(LogKey logKey, TraceKey traceKey) {
+		LogMapper logMapper = this.getLogMapper(logKey);
+		return logMapper.getNewEventId(traceKey);
+	}
+	
 	public void log(LogKey logKey, String key, String value) {
 		log(logKey, null, null, key, value);
 	}

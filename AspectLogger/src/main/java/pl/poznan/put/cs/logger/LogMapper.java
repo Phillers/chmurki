@@ -23,22 +23,27 @@ class LogMapper {
 		this.traceMappers = new HashMap<TraceKey, TraceMapper>();
 	}
 	
+	public int getNewEventId(TraceKey traceKey) {
+		TraceMapper traceMapper = this.getTraceMapper(traceKey);
+		return traceMapper.getNewEventId();
+	}
+	
 	public void log(String key, String value) {
 		XAttributeMap attributes = this.log.getAttributes();
 		attributes.put(key, new XAttributeLiteralImpl(key, value));
 		this.log.setAttributes(attributes);
 	}
 	
-	public void log(TraceKey traceId, String key, String value) {
-		log(traceId, null, key, value);
+	public void log(TraceKey traceKey, String key, String value) {
+		log(traceKey, null, key, value);
 	}
 	
-	public void log(TraceKey traceId, EventKey eventId, String key, String value) {
-		TraceMapper traceMapper = this.getTraceMapper(traceId);
-		if (eventId == null) {
+	public void log(TraceKey traceKey, EventKey eventKey, String key, String value) {
+		TraceMapper traceMapper = this.getTraceMapper(traceKey);
+		if (eventKey == null) {
 			traceMapper.log(key, value);
 		} else {
-			traceMapper.log(eventId, key, value);
+			traceMapper.log(eventKey, key, value);
 		}
 	}
 	
@@ -56,11 +61,11 @@ class LogMapper {
 		}
 	}
 	
-	private TraceMapper getTraceMapper(TraceKey traceId) {
-		TraceMapper traceMapper = this.traceMappers.get(traceId);
+	private TraceMapper getTraceMapper(TraceKey traceKey) {
+		TraceMapper traceMapper = this.traceMappers.get(traceKey);
 		if (traceMapper == null) {
 			traceMapper = new TraceMapper(this.log);
-			this.traceMappers.put(traceId, traceMapper);
+			this.traceMappers.put(traceKey, traceMapper);
 		}
 		return traceMapper;
 	}
