@@ -1,10 +1,12 @@
-package aspects;
+package pl.poznan.put.cs.aspects;
 
 import javax.ws.rs.Path;
 import javax.ws.rs.client.Invocation;
 import javax.ws.rs.core.HttpHeaders;
 
 import org.aspectj.lang.ProceedingJoinPoint;
+
+import pl.poznan.put.cs.logger.Logger;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -15,10 +17,11 @@ import java.util.UUID;
 import javax.ws.rs.DELETE;
 
 public aspect aspectLogger {
-
+	
+	private Logger logger;
 
 	aspectLogger() {
-
+		this.logger = new Logger();
 	}
 
 	//pointcut pathMethod(Path x, Object targ) : execution( * *.*(..)) && @annotation(x) && !@within(Path) && target(targ);
@@ -159,6 +162,14 @@ public aspect aspectLogger {
 		System.out.println("c_id="+"?");
 		System.out.println(headers.getRequestHeader("invoker").toString());
 
+	}
+	
+	private void logEventUsingLogger(Object target, String a_id) {
+		logEventUsingLogger(target, a_id, null, null, null, null);
+	}
+	
+	private void logEventUsingLogger(Object target, String a_id, String r_p_id, String source, String dest, String c_id) {
+		
 	}
 	
 }
