@@ -2,6 +2,7 @@ package pl.poznan.put.cs.aspects;
 
 import javax.ws.rs.Path;
 import javax.ws.rs.client.Invocation;
+import javax.ws.rs.client.SyncInvoker;
 import javax.ws.rs.client.WebTarget;
 
 import javax.ws.rs.core.HttpHeaders;
@@ -16,6 +17,8 @@ import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 
+import java.util.Date;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -24,9 +27,14 @@ import javax.ws.rs.DELETE;
 
 public aspect aspectLogger {
 	long c_id=0;
-	private class Properties{
+	public class Properties{
 		String address;
+		int c_id;
+		HashMap<Integer,String> c_address;
 		
+		Properties(){
+			c_address=new HashMap<>();
+		}
 	}
 	
 	private HashMap<Integer,Properties> propertiesMap;
@@ -38,8 +46,8 @@ public aspect aspectLogger {
 	}
 
 		
-	pointcut pathClass(Path x):  @within(x) && !@annotation(Path);
-	pointcut pathBoth(Path p1, Path p2):  @annotation(p1) && @within(p2);
+	pointcut pathClass(Path x):  @within(x);// && !@annotation(Path);
+//	pointcut pathBoth(Path p1, Path p2):  @annotation(p1) && @within(p2);
 
 	pointcut methodProperties(Object targ,HttpHeaders headers, HttpServletRequest request) : target(targ) && args(headers,request,..);
 	
@@ -56,68 +64,116 @@ public aspect aspectLogger {
 	
 	pointcut callFunction(Path p, Object o) : call(Response *.*(..)) && @within(p) &&this(o);
 	
+	pointcut syncInvokerCall(Path p, Object o) : call(Response *.SyncInvoker.*(..)) && @within(p) &&this(o);
+	
 	pointcut requestCall(WebTarget targ, Path p) : call(* *.request(..)) && target(targ) && @within(p);
 		
 
 	Response around(Path x,Object target,HttpHeaders headers, HttpServletRequest request) : returningResponse() && annotated() && pathClass(x) && methodProperties(target, headers, request){
-		logEvent(target, ""+thisJoinPoint,""+x.value(), headers);
-		System.out.println(request.getRequestURL()+request.getRequestURI() +" "+request.getRemoteHost()+" "+request.getRemoteAddr());
-		Response response = proceed(x,target,headers,request);
-		System.out.println(response.getLocation());
-		System.out.println(response);                              
-		return Response.fromResponse(response).header("invoker", ""+target.hashCode()).build();
+		String r_p_id = headers.getHeaderString("al_p_id");
+		String source=headers.getHeaderString("al_url");
+		String c_id = headers.getHeaderString("al_c_id");
+		String local_addr = request.getRequestURL().toString();
+		int l_p_id=target.hashCode();
+		Properties props=new Properties();
+		props.address=local_addr;
+		props.c_id=0;
+		props.c_address=new HashMap<>();
+		propertiesMap.put(l_p_id, props);
+		logEvent(target, ""+thisJoinPoint,r_p_id,source,local_addr,c_id,new Date());
+		activeConnections++;
+		Response response = proceed(x,target,headers,request); 
+		activeConnections--;
+		propertiesMap.remove(l_p_id);
+		logEvent(target, "return from "+thisJoinPoint,r_p_id,local_addr,source,c_id,new Date());
+		return Response.fromResponse(response).header("al_p_id", ""+l_p_id).header("al_c_id", c_id).build();
 	}
 
-	Response around(Path p1,Path p2,Object target,HttpHeaders headers, HttpServletRequest request) : returningResponse() && annotated() && pathBoth(p1,p2) && methodProperties(target, headers, request){
-		logEvent(target, ""+thisJoinPoint,""+p2.value()+p1.value(), headers);
-		System.out.println(request.getRequestURL()+request.getRequestURI() +" "+request.getRemoteHost()+" "+request.getRemoteAddr());
-		Response response = proceed(p1,p2,target,headers,request);
-		System.out.println(response.getLocation());
-		System.out.println(response);                              
-		return Response.fromResponse(response).header("invoker", ""+target.hashCode()).build();
+	before(Path x,Object target,HttpHeaders headers, HttpServletRequest request) : cflowbelow(returningResponse() && annotated() && pathClass(Path) && methodProperties(target, headers, request))&& pathClass(x){
+		logEvent(target, thisJoinPoint.toString());
 	}
 	
-	Response around(Path x,Object target,HttpHeaders headers, HttpServletRequest request) : returningVoid() && annotated() && pathClass(x) && methodProperties(target, headers, request){
-		logEvent(target, ""+thisJoinPoint,""+x.value(), headers);
-		System.out.println(request.getRequestURL()+request.getRequestURI() +" "+request.getRemoteHost()+" "+request.getRemoteAddr());
-		proceed(x,target,headers,request);
-		proceed(x,target,headers,request);                              
-		return Response.noContent().header("invoker", ""+target.hashCode()).build();
-	}
 
-	Response around(Path p1,Path p2,Object target,HttpHeaders headers, HttpServletRequest request) : returningVoid() && annotated() && pathBoth(p1,p2) && methodProperties(target, headers, request){
-		logEvent(target, ""+thisJoinPoint,""+p2.value()+p1.value(), headers);
-		System.out.println(request.getRequestURL()+request.getRequestURI() +" "+request.getRemoteHost()+" "+request.getRemoteAddr());
-		proceed(p1,p2,target,headers,request);                              
-		return Response.noContent().header("invoker", ""+target.hashCode()).build();
-	}
+//	Response around(Path p1,Path p2,Object target,HttpHeaders headers, HttpServletRequest request) : returningResponse() && annotated() && pathBoth(p1,p2) && methodProperties(target, headers, request){
+//		logEvent(target, ""+thisJoinPoint,""+p2.value()+p1.value(), headers,request);
+//		System.out.println(request.getRequestURL()+request.getRequestURI() +" "+request.getRemoteHost()+" "+request.getRemoteAddr());
+//		Response response = proceed(p1,p2,target,headers,request);
+//		System.out.println(response.getLocation());
+//		System.out.println(response);                              
+//		return Response.fromResponse(response).header("invoker", ""+target.hashCode()).build();
+//	}
+	
+//	Response around(Path x,Object target,HttpHeaders headers, HttpServletRequest request) : returningVoid() && annotated() && pathClass(x) && methodProperties(target, headers, request){
+//		String r_p_id = headers.getHeaderString("al_p_id");
+//		String source=headers.getHeaderString("al_url");
+//		String c_id = headers.getHeaderString("al_c_id");
+//		String local_addr = request.getRequestURL().toString();
+//		logEvent(target, ""+thisJoinPoint,r_p_id,source,local_addr,c_id);
+//		proceed(x,target,headers,request);                    
+//		return Response.noContent().header("invoker", ""+target.hashCode()).build();
+//	}
+
+//	Response around(Path p1,Path p2,Object target,HttpHeaders headers, HttpServletRequest request) : returningVoid() && annotated() && pathBoth(p1,p2) && methodProperties(target, headers, request){
+//		logEvent(target, ""+thisJoinPoint,""+p2.value()+p1.value(), headers,request);
+//		System.out.println(request.getRequestURL()+request.getRequestURI() +" "+request.getRemoteHost()+" "+request.getRemoteAddr());
+//		proceed(p1,p2,target,headers,request);                              
+//		return Response.noContent().header("invoker", ""+target.hashCode()).build();
+//	}
 	
 	after (WebTarget targ, Object o,Path p) returning(Invocation.Builder ib): requestCall(targ,p) && this(o){
-		System.out.println("REQUEST from "+ p.value() +" to "+ targ.getUri() + " " + thisJoinPoint);
-		System.out.println(ib.toString());
-		ib.header("invoker", ""+o.hashCode());
+		int l_p_id = o.hashCode();
+		Properties props=propertiesMap.get(l_p_id);
+		if (props == null){
+			props = new Properties();
+			props.address="/client/";
+			props.c_id=0;
+			propertiesMap.put(l_p_id, props);
+		}
+		String source=props.address;
+		props.c_id++;
+		String c_id = ""+props.c_id;
+		props.c_address.put(props.c_id, targ.getUri().toString());
+		ib.header("al_p_id", ""+o.hashCode()).header("al_url", source).header("al_c_id", c_id);
 	}
 	
-	after(Path p, Object o) returning (Response response) : callFunction(p,o){
-		System.out.println(p.value()+" "+""+o.hashCode());
-		MultivaluedMap<String, Object> headers = response.getHeaders();
-		for (String key : headers.keySet()) {
-			System.out.println(key+" "+headers.getFirst(key));
+	Response around(Path p, Object o)  : syncInvokerCall(p,o) {
+		int l_p_id=o.hashCode();
+		Date time1 = new Date();
+		System.out.println("__________________before_____________proceed " +p.value() + " "+ o +" "+thisJoinPoint);
+		Response response = proceed(p,o);
+		System.out.println("__________________after_____________proceed");
+		Date time2 = new Date();
+		String r_p_id=response.getHeaderString("al_p_id");
+		String c_id=response.getHeaderString("al_c_id");
+		System.out.println(response);
+		int c_id_int = new Integer(c_id);
+		Properties props=propertiesMap.get(l_p_id);
+		String r_address=props.c_address.get(c_id_int);
+		logEvent(o, ""+thisJoinPoint,r_p_id,props.address,r_address,c_id,time1);
+
+		logEvent(o, "return from "+thisJoinPoint,r_p_id,r_address,props.address,c_id,time2);
+		return response;
 		}
-	}
-	void logEvent(Object target, String a_id,String path, HttpHeaders headers){
+	
+	void logEvent(Object target, String a_id, String r_p_id, String source, String dest, String c_id, Date time){
 		System.out.println("e_id="+UUID.randomUUID());
 		System.out.println("r_id="+target.getClass());
 		System.out.println("a_id="+a_id);
 		System.out.println("l_p_id="+target.hashCode());
-		System.out.println("source="+"?");
-		System.out.println("destination="+path);
-		System.out.println("c_id="+"?");
-		MultivaluedMap<String, String> hdrs = headers.getRequestHeaders();
-		for (String key : hdrs.keySet()) {
-			System.out.println(key+" "+hdrs.getFirst(key));
-		}
-		
+		System.out.println("r_p_id="+r_p_id);
+		System.out.println("source="+source);
+		System.out.println("destination="+dest);
+		System.out.println("c_id="+c_id);
+		System.out.println("time="+time);
+		System.out.println("*************************************************");
 	}
 	
+	void logEvent(Object target, String a_id) {
+		System.out.println("e_id="+UUID.randomUUID());
+		System.out.println("r_id="+target.getClass());
+		System.out.println("a_id="+a_id);
+		System.out.println("l_p_id="+target.hashCode());
+		System.out.println("time="+new Date());
+		System.out.println("*************************************************");
+		}
 }
