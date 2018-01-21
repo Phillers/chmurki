@@ -3,16 +3,20 @@ package pl.poznan.put.cs.aspects;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.UUID;
+
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
+import javax.ws.rs.HEAD;
+import javax.ws.rs.OPTIONS;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
+import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.Invocation;
 import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Response;
 
@@ -21,17 +25,7 @@ import pl.poznan.put.cs.logger.LogKey;
 import pl.poznan.put.cs.logger.Logger;
 import pl.poznan.put.cs.logger.TraceKey;
 
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
 
-import java.util.Date;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
-
-import javax.ws.rs.DELETE;
 
 public aspect aspectLogger {
 
@@ -71,23 +65,31 @@ public aspect aspectLogger {
 
 	pointcut returningVoid() :  execution(void *.*(..));
 
-	pointcut returningObject() : execution(Object *.*()) && !returningResponse();
+	pointcut returningObject() : execution(* *.*()) && !returningResponse() && !returningVoid();
 
-	pointcut annotated() : @annotation(GET) || @annotation(POST)|| @annotation(PUT) || @annotation(DELETE);
+	pointcut annotated() : @annotation(GET) || @annotation(POST)|| @annotation(PUT) || @annotation(DELETE)|| @annotation(HEAD)|| @annotation(OPTIONS);
 
-	pointcut getCall(Object targ) : call( * *.get(..)) && target(targ);
+	pointcut invokeClass(Invocation target, Class returnType, Object o) : call(* *.invoke(Class)) && target(target) && args(returnType) && this(o) && @within(Path);
+	pointcut invokeGenType(Invocation target, GenericType returnType, Object o) : call(* *.invoke(Class)) && target(target) && args(returnType) && this(o) && @within(Path);
+	
+	pointcut getClass(Invocation.Builder target, Class returnType, Object o) : call( * *.get(..)) && target(target) && args(returnType) && this(o) && @within(Path);
+	pointcut getGenType(Invocation.Builder target, GenericType returnType, Object o) : call( * *.get(..)) && target(target) && args(returnType) && this(o) && @within(Path);
+	
+	pointcut postClass(Invocation.Builder target, Class returnType, Object o, Entity arg) : call( * *.post(..)) && target(target) && args(arg, returnType) && this(o) && @within(Path);
+	pointcut postGenType(Invocation.Builder target, GenericType returnType, Object o, Entity arg) : call( * *.post(..)) && target(target) && args(arg, returnType) && this(o) && @within(Path);
+	
+	pointcut putClass(Invocation.Builder target, Class returnType, Object o, Entity arg) : call( * *.put(..)) && target(target) && args(arg, returnType) && this(o) && @within(Path);
+	pointcut putGenType(Invocation.Builder target, GenericType returnType, Object o, Entity arg) : call( * *.put(..)) && target(target) && args(arg, returnType) && this(o) && @within(Path);
+	
+	pointcut deleteClass(Invocation.Builder target, Class returnType, Object o) : call( * *.delete(..)) && target(target) && args(returnType) && this(o) && @within(Path);
+	pointcut deleteGenType(Invocation.Builder target, GenericType returnType, Object o) : call( * *.delete(..)) && target(target) && args(returnType) && this(o) && @within(Path);
+	
+	pointcut optionsClass(Invocation.Builder target, Class returnType, Object o) : call( * *.options(..)) && target(target) && args(returnType) && this(o) && @within(Path);
+	pointcut optionsGenType(Invocation.Builder target, GenericType returnType, Object o) : call( * *.options(..)) && target(target) && args(returnType) && this(o) && @within(Path);
+	
+	pointcut callReturningResponse(Object o) : call(Response *.*(..)) && @within(Path) &&this(o) && (target(Invocation.Builder) || target(Invocation));
 
-	pointcut postCall(Object targ) : call( * *.post(..)) && target(targ);
-
-	pointcut putCall(Object targ) : call( * *.put(..)) && target(targ);
-
-	pointcut deleteCall(Object targ) : call( * *.delete(..)) && target(targ);
-
-	pointcut callFunction(Path p, Object o) : call(Response *.*(..)) && @within(p) &&this(o);
-
-	pointcut syncInvokerCall(Path p, Object o) : call(Response *.*(..)) && @within(p) &&this(o) && (target(Invocation.Builder) || target(Invocation));
-
-	pointcut requestCall(WebTarget targ, Path p) : call(* *.request(..)) && target(targ) && @within(p);
+	pointcut requestCall(WebTarget targ, Path p, Object o) : call(* *.request(..)) && target(targ) && @within(p) && this(o);
 
 	Response around(Path x, Object target, HttpHeaders headers, HttpServletRequest request) : returningResponse() && annotated() && pathClass(x) && methodProperties(target, headers, request){
 		String r_p_id = headers.getHeaderString("al_p_id");
@@ -145,12 +147,41 @@ public aspect aspectLogger {
 				loggedTraces = 0;
 			}
 	}
+	
+	Object around(Path x, Object target, HttpHeaders headers, HttpServletRequest request) : returningObject() && annotated() && pathClass(x) && methodProperties(target, headers, request){
+		String r_p_id = headers.getHeaderString("al_p_id");
+		String source = headers.getHeaderString("al_url");
+		String c_id = headers.getHeaderString("al_c_id");
+		String local_addr = request.getRequestURL().toString();
+		int l_p_id = target.hashCode();
+		Properties props = new Properties();
+		props.address = local_addr;
+		props.c_id = 0;
+		props.c_address = new HashMap<>();
+		propertiesMap.put(l_p_id, props);
+		if (source == "")
+			source = request.getRemoteAddr();
+		logEvent("executionNotResponse", target, "" + thisJoinPoint, r_p_id, source, local_addr, c_id, new Date());
+		activeConnections++;
+		Object response=proceed(x, target, headers, request);
+		activeConnections--;
+		propertiesMap.remove(l_p_id);
+		logEvent("returningNotResponse", target, "return from " + thisJoinPoint, r_p_id, local_addr, source, c_id,
+				new Date());
+		loggedTraces++;
+		if (activeConnections == 0)
+			if (loggedTraces >= tracesPerFile) {
+				this.logger.serializeAll(target.getClass().getSimpleName() + target.hashCode());
+				loggedTraces = 0;
+			}
+		return response;
+	}
 
 	before(Path x, Object target, HttpHeaders headers, HttpServletRequest request) : cflowbelow(execution(* *.*(..)) && annotated() && pathClass(Path) && methodProperties(target, headers, request))&& pathClass(x){
 		logEvent(target, thisJoinPoint.toString());
 	}
 
-	after(WebTarget targ, Object o, Path p) returning(Invocation.Builder ib): requestCall(targ,p) && this(o){
+	after(WebTarget targ, Object o, Path p) returning(Invocation.Builder ib): requestCall(targ,p,o) {
 		int l_p_id = o.hashCode();
 		Properties props = propertiesMap.get(l_p_id);
 		if (props == null) {
@@ -162,53 +193,38 @@ public aspect aspectLogger {
 		String source = props.address;
 		props.c_id++;
 		String c_id = "" + props.c_id;
-		String dest=targ.getUri().toString();
+		String dest = targ.getUri().toString();
 		props.c_address.put(props.c_id, dest);
 		logTempEvent(o, thisJoinPoint.toString(), source, dest, c_id);
 		ib.header("al_p_id", "" + o.hashCode()).header("al_url", source).header("al_c_id", c_id);
 	}
 
-	Response around(Path p, Object o)  : syncInvokerCall(p,o) {
-		int l_p_id = o.hashCode();
+	Response around(Object o)  : callReturningResponse(o) {		
 		Date time1 = new Date();
-
-		Response response = proceed(p, o);
-
+		Response response = proceed(o);
 		Date time2 = new Date();
-		String r_p_id = response.getHeaderString("al_p_id");
-		String c_id = response.getHeaderString("al_c_id");
-
-		Properties props = propertiesMap.get(l_p_id);
-		int c_id_int;
-		String r_address = "";
-		String e_type = "";
-		if (c_id != null) {
-			c_id_int = new Integer(c_id);
-			r_address = props.c_address.get(c_id_int);
-			e_type = "service";
-		} else {
-
-			props.c_id++;
-			c_id = "" + props.c_id;
-			r_address = "" + response.getLocation();
-			e_type = "external";
-		}
-
-		logEvent(e_type+"Call", o, "" + thisJoinPoint, r_p_id, props.address, r_address, c_id, time1);
-
-		logEvent(e_type+"Return", o, "return from " + thisJoinPoint, r_p_id, r_address, props.address, c_id, time2);
-
+		proceedResponse(response, time1, time2, o, thisJoinPoint.toString());
 		return response;
 	}
-
-	Object around(Class T, Invocation.Builder x) : call(* *.*.get(..)) && target(x) && args(T){
-
-		int l_p_id = thisJoinPoint.getThis().hashCode();
+	
+	Object around(Invocation target, Class returnType, Object o)  : invokeClass(target, returnType, o) {		
 		Date time1 = new Date();
-
-		Response response = x.get();
-
+		Response response = target.invoke();
 		Date time2 = new Date();
+		proceedResponse(response, time1, time2, o, thisJoinPoint.toString());
+		return response.readEntity(returnType);
+	}
+	
+	Object around(Invocation.Builder target, Class returnType, Object o) : getClass(target, returnType, o){
+		Date time1 = new Date();
+		Response response = target.get();
+		Date time2 = new Date();
+		proceedResponse(response, time1, time2, o, thisJoinPoint.toString());
+		return response.readEntity(returnType);
+	}
+	
+	void proceedResponse(Response response, Date time1, Date time2, Object o, String joinPoint){
+		int l_p_id = o.hashCode();
 		String r_p_id = response.getHeaderString("al_p_id");
 		String c_id = response.getHeaderString("al_c_id");
 
@@ -228,12 +244,11 @@ public aspect aspectLogger {
 			e_type = "external";
 		}
 
-		logEvent(e_type+"Call", x, "" + thisJoinPoint, r_p_id, props.address, r_address, c_id, time1);
+		logEvent(e_type + "Call", o, "" + joinPoint, r_p_id, props.address, r_address, c_id, time1);
 
-		logEvent(e_type+"Return", x, "return from " + thisJoinPoint, r_p_id, r_address, props.address, c_id, time2);
-
-		return response.readEntity(T);
+		logEvent(e_type + "Return", o, "return from " + joinPoint, r_p_id, r_address, props.address, c_id, time2);
 	}
+
 
 	void logEvent(String e_type, Object target, String a_id, String r_p_id, String source, String dest, String c_id,
 			Date time) {
