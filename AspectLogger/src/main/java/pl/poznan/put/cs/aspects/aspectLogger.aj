@@ -96,28 +96,10 @@ public aspect aspectLogger {
 		String source = headers.getHeaderString("al_url");
 		String c_id = headers.getHeaderString("al_c_id");
 		String local_addr = request.getRequestURL().toString();
-		int l_p_id = target.hashCode();
-		Properties props = new Properties();
-		props.address = local_addr;
-		props.c_id = 0;
-		props.c_address = new HashMap<>();
-		propertiesMap.put(l_p_id, props);
-		if (source == "")
-			source = request.getRemoteAddr();
-		logEvent("executionResponse", target, "" + thisJoinPoint, r_p_id, source, local_addr, c_id, new Date());
-		activeConnections++;
+		beforeProceed(target, local_addr, r_p_id, source, c_id, "executionResponse", thisJoinPoint.toString());
 		Response response = proceed(x, target, headers, request);
-		activeConnections--;
-		propertiesMap.remove(l_p_id);
-		logEvent("returningResponse", target, "return from " + thisJoinPoint, r_p_id, local_addr, source, c_id,
-				new Date());
-		loggedTraces++;
-		if (activeConnections == 0)
-			if (loggedTraces >= tracesPerFile) {
-				this.logger.serializeAll(target.getClass().getSimpleName() + target.hashCode());
-				loggedTraces = 0;
-			}
-		return Response.fromResponse(response).header("al_p_id", "" + l_p_id).header("al_c_id", c_id).build();
+		afterProceed(target, r_p_id, local_addr, source, c_id, "returningResponse", thisJoinPoint.toString());
+		return Response.fromResponse(response).header("al_p_id", "" + target.hashCode()).header("al_c_id", c_id).build();
 	}
 
 	void around(Path x, Object target, HttpHeaders headers, HttpServletRequest request) : returningVoid() && annotated() && pathClass(x) && methodProperties(target, headers, request){
@@ -125,27 +107,9 @@ public aspect aspectLogger {
 		String source = headers.getHeaderString("al_url");
 		String c_id = headers.getHeaderString("al_c_id");
 		String local_addr = request.getRequestURL().toString();
-		int l_p_id = target.hashCode();
-		Properties props = new Properties();
-		props.address = local_addr;
-		props.c_id = 0;
-		props.c_address = new HashMap<>();
-		propertiesMap.put(l_p_id, props);
-		if (source == "")
-			source = request.getRemoteAddr();
-		logEvent("executionNotResponse", target, "" + thisJoinPoint, r_p_id, source, local_addr, c_id, new Date());
-		activeConnections++;
+		beforeProceed(target, local_addr, r_p_id, source, c_id, "executionNotResponse", thisJoinPoint.toString());
 		proceed(x, target, headers, request);
-		activeConnections--;
-		propertiesMap.remove(l_p_id);
-		logEvent("returningNotResponse", target, "return from " + thisJoinPoint, r_p_id, local_addr, source, c_id,
-				new Date());
-		loggedTraces++;
-		if (activeConnections == 0)
-			if (loggedTraces >= tracesPerFile) {
-				this.logger.serializeAll(target.getClass().getSimpleName() + target.hashCode());
-				loggedTraces = 0;
-			}
+		afterProceed(target, r_p_id, local_addr, source, c_id, "returningNotResponse", thisJoinPoint.toString());
 	}
 	
 	Object around(Path x, Object target, HttpHeaders headers, HttpServletRequest request) : returningObject() && annotated() && pathClass(x) && methodProperties(target, headers, request){
@@ -153,20 +117,28 @@ public aspect aspectLogger {
 		String source = headers.getHeaderString("al_url");
 		String c_id = headers.getHeaderString("al_c_id");
 		String local_addr = request.getRequestURL().toString();
-		int l_p_id = target.hashCode();
+		if (source == null)
+			source = request.getRemoteAddr();
+		beforeProceed(target, local_addr, r_p_id, source, c_id, "executionNotResponse", thisJoinPoint.toString());
+		Object response=proceed(x, target, headers, request);
+		afterProceed(target, r_p_id, local_addr, source, c_id, "returningNotResponse", thisJoinPoint.toString());
+		return response;
+	}
+	
+	void beforeProceed(Object target, String local_addr, String r_p_id, String source, String c_id, String e_type, String a_id){	
 		Properties props = new Properties();
 		props.address = local_addr;
 		props.c_id = 0;
 		props.c_address = new HashMap<>();
-		propertiesMap.put(l_p_id, props);
-		if (source == "")
-			source = request.getRemoteAddr();
-		logEvent("executionNotResponse", target, "" + thisJoinPoint, r_p_id, source, local_addr, c_id, new Date());
+		propertiesMap.put(target.hashCode(), props);
+		logEvent(e_type, target, a_id, r_p_id, source, local_addr, c_id, new Date());
 		activeConnections++;
-		Object response=proceed(x, target, headers, request);
+	}
+	
+	void afterProceed(Object target, String r_p_id, String local_addr, String source, String c_id, String e_type, String a_id){
 		activeConnections--;
-		propertiesMap.remove(l_p_id);
-		logEvent("returningNotResponse", target, "return from " + thisJoinPoint, r_p_id, local_addr, source, c_id,
+		propertiesMap.remove(target.hashCode());
+		logEvent(e_type, target, "return from " + a_id, r_p_id, local_addr, source, c_id,
 				new Date());
 		loggedTraces++;
 		if (activeConnections == 0)
@@ -174,7 +146,6 @@ public aspect aspectLogger {
 				this.logger.serializeAll(target.getClass().getSimpleName() + target.hashCode());
 				loggedTraces = 0;
 			}
-		return response;
 	}
 
 	before(Path x, Object target, HttpHeaders headers, HttpServletRequest request) : cflowbelow(execution(* *.*(..)) && annotated() && pathClass(Path) && methodProperties(target, headers, request))&& pathClass(x){
@@ -215,9 +186,89 @@ public aspect aspectLogger {
 		return response.readEntity(returnType);
 	}
 	
+	Object around(Invocation target, GenericType returnType, Object o)  : invokeGenType(target, returnType, o) {		
+		Date time1 = new Date();
+		Response response = target.invoke();
+		Date time2 = new Date();
+		proceedResponse(response, time1, time2, o, thisJoinPoint.toString());
+		return response.readEntity(returnType);
+	}
+	
+	Object around(Invocation.Builder target, GenericType returnType, Object o) : getGenType(target, returnType, o){
+		Date time1 = new Date();
+		Response response = target.get();
+		Date time2 = new Date();
+		proceedResponse(response, time1, time2, o, thisJoinPoint.toString());
+		return response.readEntity(returnType);
+	}
+	
 	Object around(Invocation.Builder target, Class returnType, Object o) : getClass(target, returnType, o){
 		Date time1 = new Date();
 		Response response = target.get();
+		Date time2 = new Date();
+		proceedResponse(response, time1, time2, o, thisJoinPoint.toString());
+		return response.readEntity(returnType);
+	}
+	
+	Object around(Invocation.Builder target, Class returnType, Object o) : deleteClass(target, returnType, o){
+		Date time1 = new Date();
+		Response response = target.delete();
+		Date time2 = new Date();
+		proceedResponse(response, time1, time2, o, thisJoinPoint.toString());
+		return response.readEntity(returnType);
+	}
+	
+	Object around(Invocation.Builder target, GenericType returnType, Object o) : deleteGenType(target, returnType, o){
+		Date time1 = new Date();
+		Response response = target.delete();
+		Date time2 = new Date();
+		proceedResponse(response, time1, time2, o, thisJoinPoint.toString());
+		return response.readEntity(returnType);
+	}
+	
+	Object around(Invocation.Builder target, Class returnType, Object o) : optionsClass(target, returnType, o){
+		Date time1 = new Date();
+		Response response = target.options();
+		Date time2 = new Date();
+		proceedResponse(response, time1, time2, o, thisJoinPoint.toString());
+		return response.readEntity(returnType);
+	}
+	
+	Object around(Invocation.Builder target, GenericType returnType, Object o) : optionsGenType(target, returnType, o){
+		Date time1 = new Date();
+		Response response = target.options();
+		Date time2 = new Date();
+		proceedResponse(response, time1, time2, o, thisJoinPoint.toString());
+		return response.readEntity(returnType);
+	}
+	
+	Object around(Invocation.Builder target, Class returnType, Object o, Entity e) : postClass(target, returnType, o, e){
+		Date time1 = new Date();
+		Response response = target.post(e);
+		Date time2 = new Date();
+		proceedResponse(response, time1, time2, o, thisJoinPoint.toString());
+		return response.readEntity(returnType);
+	}
+	
+	Object around(Invocation.Builder target, GenericType returnType, Object o, Entity e) : postGenType(target, returnType, o, e){
+		Date time1 = new Date();
+		Response response = target.post(e);
+		Date time2 = new Date();
+		proceedResponse(response, time1, time2, o, thisJoinPoint.toString());
+		return response.readEntity(returnType);
+	}
+	
+	Object around(Invocation.Builder target, Class returnType, Object o, Entity e) : putClass(target, returnType, o, e){
+		Date time1 = new Date();
+		Response response = target.put(e);
+		Date time2 = new Date();
+		proceedResponse(response, time1, time2, o, thisJoinPoint.toString());
+		return response.readEntity(returnType);
+	}
+	
+	Object around(Invocation.Builder target, GenericType returnType, Object o, Entity e) : putGenType(target, returnType, o, e){
+		Date time1 = new Date();
+		Response response = target.put(e);
 		Date time2 = new Date();
 		proceedResponse(response, time1, time2, o, thisJoinPoint.toString());
 		return response.readEntity(returnType);
