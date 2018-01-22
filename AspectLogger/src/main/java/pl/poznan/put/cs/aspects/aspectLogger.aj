@@ -49,11 +49,13 @@ public aspect aspectLogger {
 	private int loggedTraces = 0;
 	private int tracesPerFile = 2;
 	private SimpleDateFormat sdf;
-
+	private SimpleDateFormat filenameDF;
+	
 	aspectLogger() {
 		this.logger = new Logger();
 		propertiesMap = new HashMap<Integer, Properties>();
 		sdf = new SimpleDateFormat("yyyy-MM-dd;HH:mm:ss:SSS");
+		filenameDF = new SimpleDateFormat("yyMMddHHmmssSSS");
 	}
 
 	pointcut pathClass(Path x):  @within(x);// && !@annotation(Path);
@@ -143,7 +145,7 @@ public aspect aspectLogger {
 		loggedTraces++;
 		if (activeConnections == 0)
 			if (loggedTraces >= tracesPerFile) {
-				this.logger.serializeAll(target.getClass().getSimpleName() + target.hashCode());
+				serialize(target.getClass().getSimpleName() +"_"+ target.hashCode() + "_" +filenameDF.format(new Date()));
 				loggedTraces = 0;
 			}
 	}
@@ -338,6 +340,10 @@ public aspect aspectLogger {
 		System.out.println("*************************************************");
 	}
 
+	void serialize(String filename){
+		
+	}
+	
 	private void logEventUsingLogger(Object target, String a_id) {
 		logEventUsingLogger(target, a_id, null, null, null, null, new Date());
 	}
