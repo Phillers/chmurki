@@ -341,7 +341,11 @@ public aspect aspectLogger {
 	}
 
 	void serialize(String filename){
-		
+		System.out.println("******************************");
+		System.out.println("******************************");
+		System.out.println("*******SERIALIZATION**********");
+		System.out.println(filename);
+		System.out.println("******************************");
 	}
 	
 	private void logEventUsingLogger(Object target, String a_id) {
