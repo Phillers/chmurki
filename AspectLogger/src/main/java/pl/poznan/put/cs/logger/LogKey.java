@@ -13,6 +13,10 @@ public final class LogKey {
 		this.id = id;
 	}
 	
+	public int getId() {
+		return this.id;
+	}
+	
 	@Override
 	public int hashCode() {
 		return new HashCodeBuilder(HASHCODE_PRIME1, HASHCODE_PRIME2)

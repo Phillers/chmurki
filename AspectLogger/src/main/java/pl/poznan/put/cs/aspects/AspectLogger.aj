@@ -27,12 +27,23 @@ import pl.poznan.put.cs.logger.TraceKey;
 
 
 
-public aspect aspectLogger {
+public aspect AspectLogger {
+	
 	private Logger logger;
 	private LogKey logKey;
 	private static final int MAIN_LOG_ID = 0;
-	private static final String LOCAL = "local";
-	private static final String REQUEST_CREATION = "requestCreation";
+	private static final String EVENT_TYPE_KEY = "e_type";
+	private static final String RESOURCE_ID_KEY = "r_id";
+	private static final String ACTIVITY_ID_KEY = "a_id";
+	private static final String RESOURCE_INSTANCE_ID_KEY = "l_p_id";
+	private static final String COMMUNICATION_SOURCE_ID_KEY = "source";
+	private static final String COMMUNICATION_DESTINATION_ID_KEY = "destination";
+	private static final String CONVERSATION_ID_KEY = "c_id";
+	private static final String EVENT_TIME_KEY = "time";
+	private static final String REMOTE_PROCESS_ID_KEY = "r_p_id";
+	
+	private static final String LOCAL_EVENT_TYPE = "local";
+	private static final String REQUEST_CREATION_EVENT_TYPE = "requestCreation";
 	long c_id = 0;
 
 	public class Properties {
@@ -53,7 +64,7 @@ public aspect aspectLogger {
 	private SimpleDateFormat sdf;
 	private SimpleDateFormat filenameDF;
 	
-	aspectLogger() {
+	AspectLogger() {
 		this.logger = new Logger();
 		this.logKey = new LogKey(MAIN_LOG_ID);
 		this.propertiesMap = new HashMap<Integer, Properties>();
@@ -311,22 +322,22 @@ public aspect aspectLogger {
 		String r_id = target.getClass().getName();
 		Integer l_p_id = target.hashCode();
 		
-		System.out.println("e_type=" + this.LOCAL);
-		System.out.println("r_id=" + r_id);
-		System.out.println("a_id=" + a_id);
-		System.out.println("l_p_id=" + l_p_id);
-		System.out.println("time=" + sdf.format(new Date()));
+		System.out.println(EVENT_TYPE_KEY + "=" + LOCAL_EVENT_TYPE);
+		System.out.println(RESOURCE_ID_KEY + "=" + r_id);
+		System.out.println(ACTIVITY_ID_KEY + "=" + a_id);
+		System.out.println(RESOURCE_INSTANCE_ID_KEY + "=" + l_p_id);
+		System.out.println(EVENT_TIME_KEY + "=" + sdf.format(new Date()));
 		System.out.println("*************************************************");
 		
 		TraceKey traceKey = new TraceKey(r_id, l_p_id);
 		Integer eventId = logger.getNewEventID(this.logKey, traceKey);
 		EventKey eventKey = new EventKey(eventId);
 		
-		this.logger.log(this.logKey, traceKey, eventKey, "e_type", this.LOCAL);
-		this.logger.log(this.logKey, traceKey, eventKey, "r_id", r_id);
-		this.logger.log(this.logKey, traceKey, eventKey, "a_id", a_id);
-		this.logger.log(this.logKey, traceKey, eventKey, "l_p_id", l_p_id.toString());
-		this.logger.log(this.logKey, traceKey, eventKey, "time", sdf.format(new Date()));
+		this.logger.log(this.logKey, traceKey, eventKey, EVENT_TYPE_KEY, LOCAL_EVENT_TYPE);
+		this.logger.log(this.logKey, traceKey, eventKey, RESOURCE_ID_KEY, r_id);
+		this.logger.log(this.logKey, traceKey, eventKey, ACTIVITY_ID_KEY, a_id);
+		this.logger.log(this.logKey, traceKey, eventKey, RESOURCE_INSTANCE_ID_KEY, l_p_id.toString());
+		this.logger.log(this.logKey, traceKey, eventKey, EVENT_TIME_KEY, sdf.format(new Date()));
 	}
 
 
@@ -335,91 +346,63 @@ public aspect aspectLogger {
 		String r_id = target.getClass().getName();
 		Integer l_p_id = target.hashCode();
 		
-		System.out.println("e_type=" + e_type);
-		System.out.println("r_id=" + r_id);
-		System.out.println("a_id=" + a_id);
-		System.out.println("l_p_id=" + l_p_id);
-		System.out.println("r_p_id=" + r_p_id);
-		System.out.println("source=" + source);
-		System.out.println("destination=" + dest);
-		System.out.println("c_id=" + c_id);
-		System.out.println("time=" + sdf.format(time));
+		System.out.println(EVENT_TYPE_KEY + "=" + e_type);
+		System.out.println(RESOURCE_ID_KEY + "=" + r_id);
+		System.out.println(ACTIVITY_ID_KEY + "=" + a_id);
+		System.out.println(RESOURCE_INSTANCE_ID_KEY + "=" + l_p_id);
+		System.out.println(REMOTE_PROCESS_ID_KEY + "=" + r_p_id);
+		System.out.println(COMMUNICATION_SOURCE_ID_KEY + "=" + source);
+		System.out.println(COMMUNICATION_DESTINATION_ID_KEY + "=" + dest);
+		System.out.println(CONVERSATION_ID_KEY + "=" + c_id);
+		System.out.println(EVENT_TIME_KEY + "=" + sdf.format(time));
 		System.out.println("*************************************************");
 		
 		TraceKey traceKey = new TraceKey(r_id, l_p_id);
 		Integer eventId = logger.getNewEventID(this.logKey, traceKey);
 		EventKey eventKey = new EventKey(eventId);
 		
-		this.logger.log(this.logKey, traceKey, eventKey, "e_type", e_type);
-		this.logger.log(this.logKey, traceKey, eventKey, "r_id", r_id);
-		this.logger.log(this.logKey, traceKey, eventKey, "a_id", a_id);
-		this.logger.log(this.logKey, traceKey, eventKey, "l_p_id", l_p_id.toString());
-		this.logger.log(this.logKey, traceKey, eventKey, "r_p_id", r_p_id);
-		this.logger.log(this.logKey, traceKey, eventKey, "source", source);
-		this.logger.log(this.logKey, traceKey, eventKey, "destination", dest);
-		this.logger.log(this.logKey, traceKey, eventKey, "c_id", c_id);
-		this.logger.log(this.logKey, traceKey, eventKey, "time", sdf.format(time));
+		this.logger.log(this.logKey, traceKey, eventKey, EVENT_TYPE_KEY, e_type);
+		this.logger.log(this.logKey, traceKey, eventKey, RESOURCE_ID_KEY, r_id);
+		this.logger.log(this.logKey, traceKey, eventKey, ACTIVITY_ID_KEY, a_id);
+		this.logger.log(this.logKey, traceKey, eventKey, RESOURCE_INSTANCE_ID_KEY, l_p_id.toString());
+		this.logger.log(this.logKey, traceKey, eventKey, REMOTE_PROCESS_ID_KEY, r_p_id);
+		this.logger.log(this.logKey, traceKey, eventKey, COMMUNICATION_SOURCE_ID_KEY, source);
+		this.logger.log(this.logKey, traceKey, eventKey, COMMUNICATION_DESTINATION_ID_KEY, dest);
+		this.logger.log(this.logKey, traceKey, eventKey, CONVERSATION_ID_KEY, c_id);
+		this.logger.log(this.logKey, traceKey, eventKey, EVENT_TIME_KEY, sdf.format(time));
 	}
 
 	void logTempEvent(Object target, String a_id, String source, String dest, String c_id) {
 		String r_id = target.getClass().getName();
 		Integer l_p_id = target.hashCode();
 		
-		System.out.println("e_type=" + this.REQUEST_CREATION);
-		System.out.println("r_id=" + r_id);
-		System.out.println("a_id=" + a_id);
-		System.out.println("l_p_id=" + l_p_id);
-		System.out.println("source=" + source);
-		System.out.println("destination=" + dest);
-		System.out.println("c_id=" + c_id);
-		System.out.println("time=" + sdf.format(new Date()));
+		System.out.println(EVENT_TYPE_KEY + "=" + REQUEST_CREATION_EVENT_TYPE);
+		System.out.println(RESOURCE_ID_KEY + "=" + r_id);
+		System.out.println(ACTIVITY_ID_KEY + "=" + a_id);
+		System.out.println(RESOURCE_INSTANCE_ID_KEY + "=" + l_p_id);
+		System.out.println(COMMUNICATION_SOURCE_ID_KEY + "=" + source);
+		System.out.println(COMMUNICATION_DESTINATION_ID_KEY + "=" + dest);
+		System.out.println(CONVERSATION_ID_KEY + "=" + c_id);
+		System.out.println(EVENT_TIME_KEY + "=" + sdf.format(new Date()));
 		System.out.println("*************************************************");
 		
 		TraceKey traceKey = new TraceKey(r_id, l_p_id);
 		Integer eventId = logger.getNewEventID(this.logKey, traceKey);
 		EventKey eventKey = new EventKey(eventId);
 		
-		this.logger.log(this.logKey, traceKey, eventKey, "e_type", this.REQUEST_CREATION);
-		this.logger.log(this.logKey, traceKey, eventKey, "r_id", r_id);
-		this.logger.log(this.logKey, traceKey, eventKey, "a_id", a_id);
-		this.logger.log(this.logKey, traceKey, eventKey, "l_p_id", l_p_id.toString());
-		this.logger.log(this.logKey, traceKey, eventKey, "source", source);
-		this.logger.log(this.logKey, traceKey, eventKey, "destination", dest);
-		this.logger.log(this.logKey, traceKey, eventKey, "c_id", c_id);
-		this.logger.log(this.logKey, traceKey, eventKey, "time", sdf.format(new Date()));
+		this.logger.log(this.logKey, traceKey, eventKey, EVENT_TYPE_KEY, REQUEST_CREATION_EVENT_TYPE);
+		this.logger.log(this.logKey, traceKey, eventKey, RESOURCE_ID_KEY, r_id);
+		this.logger.log(this.logKey, traceKey, eventKey, ACTIVITY_ID_KEY, a_id);
+		this.logger.log(this.logKey, traceKey, eventKey, RESOURCE_INSTANCE_ID_KEY, l_p_id.toString());
+		this.logger.log(this.logKey, traceKey, eventKey, COMMUNICATION_SOURCE_ID_KEY, source);
+		this.logger.log(this.logKey, traceKey, eventKey, COMMUNICATION_DESTINATION_ID_KEY, dest);
+		this.logger.log(this.logKey, traceKey, eventKey, CONVERSATION_ID_KEY, c_id);
+		this.logger.log(this.logKey, traceKey, eventKey, EVENT_TIME_KEY, sdf.format(new Date()));
 	}
 
 	void serialize(String filename){
 		this.logger.serializeLog(this.logKey, filename);
 	}
-//	
-//	private void logEventUsingLogger(Object target, String a_id) {
-//		logEventUsingLogger(target, a_id, null, null, null, null, new Date());
-//	}
-//
-//	private void logEventUsingLogger(Object target, String a_id, String r_p_id, String source, String destination,
-//			String c_id, Date time) {
-//		String r_id = target.getClass().getName();
-//		Integer l_p_id = target.hashCode();
-//
-//		TraceKey traceKey = new TraceKey(r_id, l_p_id);
-//		Integer eventId = logger.getNewEventID(this.logKey, traceKey);
-//		EventKey eventKey = new EventKey(eventId);
-//
-//		this.logger.log(this.logKey, traceKey, eventKey, "e_id", eventId.toString());
-//		this.logger.log(this.logKey, traceKey, eventKey, "r_id", r_id);
-//		this.logger.log(this.logKey, traceKey, eventKey, "a_id", a_id);
-//		this.logger.log(this.logKey, traceKey, eventKey, "l_p_id", l_p_id.toString());
-//
-//		if (r_p_id != null) {
-//			this.logger.log(this.logKey, traceKey, eventKey, "r_p_id", r_p_id);
-//			this.logger.log(this.logKey, traceKey, eventKey, "source", source);
-//			this.logger.log(this.logKey, traceKey, eventKey, "destination", destination);
-//			this.logger.log(this.logKey, traceKey, eventKey, "c_id", c_id);
-//		}
-//
-//		this.logger.log(this.logKey, traceKey, eventKey, "time", time.toString());
-//	}
 
 	protected void finalize() {
 		this.logger.serializeAll("logs");
