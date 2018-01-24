@@ -101,6 +101,11 @@ public aspect aspectLogger {
 		String source = headers.getHeaderString("al_url");
 		String c_id = headers.getHeaderString("al_c_id");
 		String local_addr = request.getRequestURL().toString();
+		if (source == null){
+			source = request.getRemoteAddr();
+			r_p_id="";
+			c_id="";
+		}
 		beforeProceed(target, local_addr, r_p_id, source, c_id, "executionResponse", thisJoinPoint.toString());
 		Response response = proceed(x, target, headers, request);
 		afterProceed(target, r_p_id, local_addr, source, c_id, "returningResponse", thisJoinPoint.toString());
@@ -112,6 +117,11 @@ public aspect aspectLogger {
 		String source = headers.getHeaderString("al_url");
 		String c_id = headers.getHeaderString("al_c_id");
 		String local_addr = request.getRequestURL().toString();
+		if (source == null){
+			source = request.getRemoteAddr();
+			r_p_id="";
+			c_id="";
+		}
 		beforeProceed(target, local_addr, r_p_id, source, c_id, "executionNotResponse", thisJoinPoint.toString());
 		proceed(x, target, headers, request);
 		afterProceed(target, r_p_id, local_addr, source, c_id, "returningNotResponse", thisJoinPoint.toString());
@@ -122,8 +132,11 @@ public aspect aspectLogger {
 		String source = headers.getHeaderString("al_url");
 		String c_id = headers.getHeaderString("al_c_id");
 		String local_addr = request.getRequestURL().toString();
-		if (source == null)
+		if (source == null){
 			source = request.getRemoteAddr();
+			r_p_id="";
+			c_id="";
+		}
 		beforeProceed(target, local_addr, r_p_id, source, c_id, "executionNotResponse", thisJoinPoint.toString());
 		Object response=proceed(x, target, headers, request);
 		afterProceed(target, r_p_id, local_addr, source, c_id, "returningNotResponse", thisJoinPoint.toString());
