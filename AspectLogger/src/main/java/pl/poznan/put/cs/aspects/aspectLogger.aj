@@ -28,9 +28,11 @@ import pl.poznan.put.cs.logger.TraceKey;
 
 
 public aspect aspectLogger {
-
 	private Logger logger;
+	private LogKey logKey;
 	private static final int MAIN_LOG_ID = 0;
+	private static final String LOCAL = "local";
+	private static final String REQUEST_CREATION = "requestCreation";
 	long c_id = 0;
 
 	public class Properties {
@@ -47,15 +49,16 @@ public aspect aspectLogger {
 	private HashMap<Integer, Properties> propertiesMap;
 	private int activeConnections = 0;
 	private int loggedTraces = 0;
-	private int tracesPerFile = 2;
+	private int tracesPerFile = 1;
 	private SimpleDateFormat sdf;
 	private SimpleDateFormat filenameDF;
 	
 	aspectLogger() {
 		this.logger = new Logger();
-		propertiesMap = new HashMap<Integer, Properties>();
-		sdf = new SimpleDateFormat("yyyy-MM-dd;HH:mm:ss:SSS");
-		filenameDF = new SimpleDateFormat("yyMMddHHmmssSSS");
+		this.logKey = new LogKey(MAIN_LOG_ID);
+		this.propertiesMap = new HashMap<Integer, Properties>();
+		this.sdf = new SimpleDateFormat("yyyy-MM-dd;HH:mm:ss:SSS");
+		this.filenameDF = new SimpleDateFormat("yyMMddHHmmssSSS");
 	}
 
 	pointcut pathClass(Path x):  @within(x);// && !@annotation(Path);
@@ -294,6 +297,7 @@ public aspect aspectLogger {
 			props.c_id++;
 			c_id = "" + props.c_id;
 			r_address = "" + response.getLocation();
+			r_p_id = "";
 			e_type = "external";
 		}
 
@@ -303,79 +307,119 @@ public aspect aspectLogger {
 	}
 
 
+	void logEvent(Object target, String a_id) {
+		String r_id = target.getClass().getName();
+		Integer l_p_id = target.hashCode();
+		
+		System.out.println("e_type=" + this.LOCAL);
+		System.out.println("r_id=" + r_id);
+		System.out.println("a_id=" + a_id);
+		System.out.println("l_p_id=" + l_p_id);
+		System.out.println("time=" + sdf.format(new Date()));
+		System.out.println("*************************************************");
+		
+		TraceKey traceKey = new TraceKey(r_id, l_p_id);
+		Integer eventId = logger.getNewEventID(this.logKey, traceKey);
+		EventKey eventKey = new EventKey(eventId);
+		
+		this.logger.log(this.logKey, traceKey, eventKey, "e_type", this.LOCAL);
+		this.logger.log(this.logKey, traceKey, eventKey, "r_id", r_id);
+		this.logger.log(this.logKey, traceKey, eventKey, "a_id", a_id);
+		this.logger.log(this.logKey, traceKey, eventKey, "l_p_id", l_p_id.toString());
+		this.logger.log(this.logKey, traceKey, eventKey, "time", sdf.format(new Date()));
+	}
+
+
 	void logEvent(String e_type, Object target, String a_id, String r_p_id, String source, String dest, String c_id,
 			Date time) {
+		String r_id = target.getClass().getName();
+		Integer l_p_id = target.hashCode();
+		
 		System.out.println("e_type=" + e_type);
-		System.out.println("r_id=" + target.getClass().getName());
+		System.out.println("r_id=" + r_id);
 		System.out.println("a_id=" + a_id);
-		System.out.println("l_p_id=" + target.hashCode());
+		System.out.println("l_p_id=" + l_p_id);
 		System.out.println("r_p_id=" + r_p_id);
 		System.out.println("source=" + source);
 		System.out.println("destination=" + dest);
 		System.out.println("c_id=" + c_id);
 		System.out.println("time=" + sdf.format(time));
 		System.out.println("*************************************************");
-		// logEventUsingLogger( target, a_id, r_p_id, source, dest, c_id,time);
-	}
-
-	void logEvent(Object target, String a_id) {
-		System.out.println("e_type=" + "local");
-		System.out.println("r_id=" + target.getClass().getName());
-		System.out.println("a_id=" + a_id);
-		System.out.println("l_p_id=" + target.hashCode());
-		System.out.println("time=" + sdf.format(new Date()));
-		System.out.println("*************************************************");
-		// logEventUsingLogger(target, a_id);
+		
+		TraceKey traceKey = new TraceKey(r_id, l_p_id);
+		Integer eventId = logger.getNewEventID(this.logKey, traceKey);
+		EventKey eventKey = new EventKey(eventId);
+		
+		this.logger.log(this.logKey, traceKey, eventKey, "e_type", e_type);
+		this.logger.log(this.logKey, traceKey, eventKey, "r_id", r_id);
+		this.logger.log(this.logKey, traceKey, eventKey, "a_id", a_id);
+		this.logger.log(this.logKey, traceKey, eventKey, "l_p_id", l_p_id.toString());
+		this.logger.log(this.logKey, traceKey, eventKey, "r_p_id", r_p_id);
+		this.logger.log(this.logKey, traceKey, eventKey, "source", source);
+		this.logger.log(this.logKey, traceKey, eventKey, "destination", dest);
+		this.logger.log(this.logKey, traceKey, eventKey, "c_id", c_id);
+		this.logger.log(this.logKey, traceKey, eventKey, "time", sdf.format(time));
 	}
 
 	void logTempEvent(Object target, String a_id, String source, String dest, String c_id) {
-		System.out.println("e_type=" + "requestCreation");
-		System.out.println("r_id=" + target.getClass().getName());
+		String r_id = target.getClass().getName();
+		Integer l_p_id = target.hashCode();
+		
+		System.out.println("e_type=" + this.REQUEST_CREATION);
+		System.out.println("r_id=" + r_id);
 		System.out.println("a_id=" + a_id);
-		System.out.println("l_p_id=" + target.hashCode());
+		System.out.println("l_p_id=" + l_p_id);
 		System.out.println("source=" + source);
 		System.out.println("destination=" + dest);
 		System.out.println("c_id=" + c_id);
 		System.out.println("time=" + sdf.format(new Date()));
 		System.out.println("*************************************************");
+		
+		TraceKey traceKey = new TraceKey(r_id, l_p_id);
+		Integer eventId = logger.getNewEventID(this.logKey, traceKey);
+		EventKey eventKey = new EventKey(eventId);
+		
+		this.logger.log(this.logKey, traceKey, eventKey, "e_type", this.REQUEST_CREATION);
+		this.logger.log(this.logKey, traceKey, eventKey, "r_id", r_id);
+		this.logger.log(this.logKey, traceKey, eventKey, "a_id", a_id);
+		this.logger.log(this.logKey, traceKey, eventKey, "l_p_id", l_p_id.toString());
+		this.logger.log(this.logKey, traceKey, eventKey, "source", source);
+		this.logger.log(this.logKey, traceKey, eventKey, "destination", dest);
+		this.logger.log(this.logKey, traceKey, eventKey, "c_id", c_id);
+		this.logger.log(this.logKey, traceKey, eventKey, "time", sdf.format(new Date()));
 	}
 
 	void serialize(String filename){
-		System.out.println("******************************");
-		System.out.println("******************************");
-		System.out.println("*******SERIALIZATION**********");
-		System.out.println(filename);
-		System.out.println("******************************");
+		this.logger.serializeLog(this.logKey, filename);
 	}
-	
-	private void logEventUsingLogger(Object target, String a_id) {
-		logEventUsingLogger(target, a_id, null, null, null, null, new Date());
-	}
-
-	private void logEventUsingLogger(Object target, String a_id, String r_p_id, String source, String destination,
-			String c_id, Date time) {
-		String r_id = target.getClass().getName();
-		Integer l_p_id = target.hashCode();
-
-		LogKey logKey = new LogKey(MAIN_LOG_ID);
-		TraceKey traceKey = new TraceKey(r_id, l_p_id);
-		Integer eventId = logger.getNewEventID(logKey, traceKey);
-		EventKey eventKey = new EventKey(eventId);
-
-		this.logger.log(logKey, traceKey, eventKey, "e_id", eventId.toString());
-		this.logger.log(logKey, traceKey, eventKey, "r_id", target.getClass().getName());
-		this.logger.log(logKey, traceKey, eventKey, "a_id", a_id);
-		this.logger.log(logKey, traceKey, eventKey, "l_p_id", l_p_id.toString());
-
-		if (r_p_id != null) {
-			this.logger.log(logKey, traceKey, eventKey, "r_p_id", r_p_id);
-			this.logger.log(logKey, traceKey, eventKey, "source", source);
-			this.logger.log(logKey, traceKey, eventKey, "destination", destination);
-			this.logger.log(logKey, traceKey, eventKey, "c_id", c_id);
-		}
-
-		this.logger.log(logKey, traceKey, eventKey, "time", time.toString());
-	}
+//	
+//	private void logEventUsingLogger(Object target, String a_id) {
+//		logEventUsingLogger(target, a_id, null, null, null, null, new Date());
+//	}
+//
+//	private void logEventUsingLogger(Object target, String a_id, String r_p_id, String source, String destination,
+//			String c_id, Date time) {
+//		String r_id = target.getClass().getName();
+//		Integer l_p_id = target.hashCode();
+//
+//		TraceKey traceKey = new TraceKey(r_id, l_p_id);
+//		Integer eventId = logger.getNewEventID(this.logKey, traceKey);
+//		EventKey eventKey = new EventKey(eventId);
+//
+//		this.logger.log(this.logKey, traceKey, eventKey, "e_id", eventId.toString());
+//		this.logger.log(this.logKey, traceKey, eventKey, "r_id", r_id);
+//		this.logger.log(this.logKey, traceKey, eventKey, "a_id", a_id);
+//		this.logger.log(this.logKey, traceKey, eventKey, "l_p_id", l_p_id.toString());
+//
+//		if (r_p_id != null) {
+//			this.logger.log(this.logKey, traceKey, eventKey, "r_p_id", r_p_id);
+//			this.logger.log(this.logKey, traceKey, eventKey, "source", source);
+//			this.logger.log(this.logKey, traceKey, eventKey, "destination", destination);
+//			this.logger.log(this.logKey, traceKey, eventKey, "c_id", c_id);
+//		}
+//
+//		this.logger.log(this.logKey, traceKey, eventKey, "time", time.toString());
+//	}
 
 	protected void finalize() {
 		this.logger.serializeAll("logs");
