@@ -199,12 +199,6 @@
 			<artifactId>javax.ws.rs-api</artifactId>
 			<version>2.1</version>
 		</dependency>
-		<!-- Guava - Google Core Libraries for Java -->
-		<dependency>
-			<groupId>com.google.guava</groupId>
-			<artifactId>guava</artifactId>
-			<version>23.6-jre</version>
-		</dependency>
 		<!-- AspectJ runtime -->
 		<dependency>
 			<groupId>org.aspectj</groupId>
