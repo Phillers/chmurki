@@ -41,7 +41,7 @@ public class Logger {
 	
 	public void serializeAll(String baseOutputFileName) {
 		for (LogKey key : this.logMappers.keySet()) {
-			serializeLog(key, baseOutputFileName + key);
+			serializeLog(key, baseOutputFileName + key.getId());
 		}
 	}
 	
