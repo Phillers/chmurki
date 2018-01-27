@@ -44,7 +44,6 @@ public aspect AspectLogger {
 	
 	private static final String LOCAL_EVENT_TYPE = "local";
 	private static final String REQUEST_CREATION_EVENT_TYPE = "requestCreation";
-	long c_id = 0;
 
 	public class Properties {
 		String address;
@@ -60,7 +59,7 @@ public aspect AspectLogger {
 	private HashMap<Integer, Properties> propertiesMap;
 	private int activeConnections = 0;
 	private int loggedTraces = 0;
-	private int tracesPerFile = 1;
+	private int tracesPerFile = 2;
 	private SimpleDateFormat sdf;
 	private SimpleDateFormat filenameDF;
 	
@@ -177,7 +176,7 @@ public aspect AspectLogger {
 			}
 	}
 
-	before(Path x, Object target, HttpHeaders headers, HttpServletRequest request) : cflowbelow(execution(* *.*(..)) && annotated() && pathClass(Path) && methodProperties(target, headers, request))&& pathClass(x){
+	before(Path x, Object target, HttpHeaders headers, HttpServletRequest request) : cflowbelow(execution(* *.*(..)) && annotated() && pathClass(Path) && methodProperties(target, headers, request))&& pathClass(x) && execution(* *.*(..)){
 		logEvent(target, thisJoinPoint.toString());
 	}
 
@@ -410,12 +409,12 @@ public aspect AspectLogger {
 		this.logger.log(this.logKey, traceKey, eventKey, CONVERSATION_ID_KEY, c_id);
 		this.logger.log(this.logKey, traceKey, eventKey, EVENT_TIME_KEY, sdf.format(new Date()));
 }
-
+	
 	void serialize(String filename){
 		this.logger.serializeLog(this.logKey, filename);
 	}
 
 	protected void finalize() {
-		this.logger.serializeAll("logs");
+		serialize("log"+this.hashCode());
 	}
 }
