@@ -1,0 +1,20 @@
+# Eclipse
+.metadata
+bin/
+tmp/
+*.tmp
+*.bak
+*.swp
+*~.nib
+local.properties
+.settings/
+.loadpath
+.recommenders
+
+# Maven
+/target/
+
+# AspectLogger specific
+*.jar
+*.xes
+
