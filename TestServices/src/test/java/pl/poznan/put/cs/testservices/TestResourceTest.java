@@ -17,7 +17,7 @@ public class TestResourceTest {
 	@Test
 	public void test() {
 		Client client = ClientBuilder.newClient();
-		int startingNumber = ThreadLocalRandom.current().nextInt(0, 256);
+		int startingNumber = ThreadLocalRandom.current().nextInt(0, 1024);
 		try {
 			Response response = client.target("http://localhost:8080/testservices/resource1/").request()
 					.post(Entity.entity(new TestResource(startingNumber), MediaType.APPLICATION_JSON));

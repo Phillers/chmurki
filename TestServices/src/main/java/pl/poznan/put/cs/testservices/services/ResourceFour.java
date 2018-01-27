@@ -30,10 +30,10 @@ public class ResourceFour {
 			String targetResourcePath = "";
 			switch (testResource.getRemainder()) {
 			case 1:
-				targetResourcePath = "resource1/";
+				targetResourcePath = "resource5/";
 				break;
 			case 2:
-				targetResourcePath = "resource2/";
+				targetResourcePath = "resource6/";
 				break;
 			case 3:
 				targetResourcePath = "resource3/";
