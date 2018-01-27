@@ -4,9 +4,11 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class Logger {
+	private String baseOutputPath;
 	private Map<LogKey, LogMapper> logMappers;
 	
 	public Logger() {
+		this.baseOutputPath = "aspect-logs/";
 		this.logMappers = new HashMap<LogKey, LogMapper>();
 	}
 	
@@ -16,11 +18,11 @@ public class Logger {
 	}
 	
 	public void log(LogKey logKey, String key, String value) {
-		log(logKey, null, null, key, value);
+		this.log(logKey, null, null, key, value);
 	}
 	
 	public void log(LogKey logKey, TraceKey traceKey, String key, String value) {
-		log(logKey, traceKey, null, key, value);
+		this.log(logKey, traceKey, null, key, value);
 	}
 	
 	public void log(LogKey logKey, TraceKey traceKey, EventKey eventKey, String key, String value) {
@@ -34,14 +36,14 @@ public class Logger {
 		}
 	}
 	
-	public void serializeLog(LogKey logKey, String outputFileName) {
+	public void serializeLog(LogKey logKey, String outputFilename) {
 		LogMapper logMapper = this.getLogMapper(logKey);
-		logMapper.serializeLog(outputFileName);
+		logMapper.serializeLog(this.baseOutputPath + outputFilename);
 	}
 	
-	public void serializeAll(String baseOutputFileName) {
+	public void serializeAll(String baseOutputFilename) {
 		for (LogKey key : this.logMappers.keySet()) {
-			serializeLog(key, baseOutputFileName + key.getId());
+			this.serializeLog(key, baseOutputFilename + "_" + key.getId());
 		}
 	}
 	

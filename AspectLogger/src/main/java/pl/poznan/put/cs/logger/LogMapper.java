@@ -1,5 +1,6 @@
 package pl.poznan.put.cs.logger;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -47,12 +48,14 @@ class LogMapper {
 		}
 	}
 	
-	public void serializeLog(String outputFileName) {
+	public void serializeLog(String outputPath) {
 		XesXmlSerializer serializer = new XesXmlSerializer();
 		OutputStream outputStream = null;
 		
 		try {
-			outputStream = new FileOutputStream(outputFileName + ".xes");
+			File file = new File(outputPath + ".xes");
+			file.getParentFile().mkdirs();
+			outputStream = new FileOutputStream(file);
 			serializer.serialize(this.log, outputStream);
 			this.log.clear();
 			this.traceMappers.clear();
