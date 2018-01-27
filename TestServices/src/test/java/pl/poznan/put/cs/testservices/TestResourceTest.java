@@ -19,9 +19,11 @@ public class TestResourceTest {
 		Client client = ClientBuilder.newClient();
 		int startingNumber = ThreadLocalRandom.current().nextInt(0, 256);
 		try {
-			Response response = client.target("http://localhost:8080/testservices/resource1")
-					.request().get();
-			if (response.getStatus() != 200) throw new RuntimeException("Failed to send request");
+			Response response = client.target("http://localhost:8080/testservices/resource1/").request()
+					.post(Entity.entity(new TestResource(startingNumber), MediaType.APPLICATION_JSON));
+			if (response.getStatus() != 200) {
+				throw new RuntimeException("Failed to send request");
+			}
 			response.close();
 		} finally {
 			client.close();

@@ -5,6 +5,10 @@ import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
@@ -19,17 +23,36 @@ public class ResourceOne {
 		
 	}
 	
-	@GET
-	public void test() {
-		System.out.println("GET\n");
-	}
-
-	
 	@POST
 	@Consumes(MediaType.APPLICATION_JSON)
-	public Response processResource(@Context HttpHeaders httpHeaders,
+	public Response processResourceOne(@Context HttpHeaders httpHeaders,
 			@Context HttpServletRequest httpServletRequest, TestResource testResource) {
-		System.out.println("Received request\n");
+		if (testResource.getRemainder() >= 1 && testResource.getRemainder() <= 3) {
+			String targetResourcePath = "";
+			switch (testResource.getRemainder()) {
+			case 1:
+				targetResourcePath = "resource2/";
+				break;
+			case 2:
+				targetResourcePath = "resource3/";
+				break;
+			case 3:
+				targetResourcePath = "resource4/";
+				break;
+			default:
+				break;
+			}
+			testResource.shiftNumber();
+			
+			Client client = ClientBuilder.newClient();
+			try {
+				Response response = client.target("http://localhost:8080/testservices/" + targetResourcePath).request()
+						.post(Entity.entity(testResource, MediaType.APPLICATION_JSON));
+				response.close();
+			} finally {
+				client.close();
+			}
+		}
 		return Response.ok().build();
 	}
 }
