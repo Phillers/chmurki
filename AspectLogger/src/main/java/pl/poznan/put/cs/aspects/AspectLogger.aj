@@ -59,7 +59,7 @@ public aspect AspectLogger {
 	private HashMap<Integer, Properties> propertiesMap;
 	private int activeConnections = 0;
 	private int loggedTraces = 0;
-	private int tracesPerFile = 2;
+	private int tracesPerFile = 1;
 	private SimpleDateFormat sdf;
 	private SimpleDateFormat filenameDF;
 	
