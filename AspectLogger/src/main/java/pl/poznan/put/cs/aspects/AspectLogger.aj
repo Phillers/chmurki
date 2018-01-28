@@ -69,10 +69,10 @@ public aspect AspectLogger {
 		this.propertiesMap = new HashMap<Integer, Properties>();
 		this.sdf = new SimpleDateFormat("yyyy-MM-dd;HH:mm:ss:SSS");
 		this.filenameDF = new SimpleDateFormat("yyMMddHHmmssSSS");
+		
 	}
 
-	pointcut pathClass(Path x):  @within(x);// && !@annotation(Path);
-	// pointcut pathBoth(Path p1, Path p2): @annotation(p1) && @within(p2);
+	pointcut pathClass(Path x):  @within(x);
 
 	pointcut methodProperties(Object targ, HttpHeaders headers, HttpServletRequest request) : target(targ) && args(headers,request,..);
 
@@ -106,6 +106,8 @@ public aspect AspectLogger {
 
 	pointcut requestCall(WebTarget targ, Path p, Object o) : call(* *.request(..)) && target(targ) && @within(p) && this(o);
 
+	pointcut loggingMethod() : call(* *.*(..)) && (target(java.util.logging.Logger) || target(org.apache.log4j.Logger));
+	
 	Response around(Path x, Object target, HttpHeaders headers, HttpServletRequest request) : returningResponse() && annotated() && pathClass(x) && methodProperties(target, headers, request){
 		String r_p_id = headers.getHeaderString("al_p_id");
 		String source = headers.getHeaderString("al_url");
@@ -178,6 +180,15 @@ public aspect AspectLogger {
 
 	before(Path x, Object target, HttpHeaders headers, HttpServletRequest request) : cflowbelow(execution(* *.*(..)) && annotated() && pathClass(Path) && methodProperties(target, headers, request))&& pathClass(x) && execution(* *.*(..)){
 		logEvent(target, thisJoinPoint.toString());
+	}
+	
+	before(Object o) : loggingMethod() && this(o){
+		String a_id=thisJoinPoint.toString()+" with args: ";
+		Object[] args=thisJoinPoint.getArgs();
+		for(Object arg : args){
+			a_id+=arg+" ";
+		}
+		logEvent(o, a_id);
 	}
 
 	after(WebTarget targ, Object o, Path p) returning(Invocation.Builder ib): requestCall(targ,p,o) {
@@ -306,7 +317,7 @@ public aspect AspectLogger {
 		int l_p_id = o.hashCode();
 		String r_p_id = response.getHeaderString("al_p_id");
 		String c_id = response.getHeaderString("al_c_id");
-
+		int status = response.getStatus();
 		Properties props = propertiesMap.get(l_p_id);
 		int c_id_int;
 		String r_address = "";
@@ -326,7 +337,7 @@ public aspect AspectLogger {
 
 		logEvent(e_type + "Call", o, "" + joinPoint, r_p_id, props.address, r_address, c_id, time1);
 
-		logEvent(e_type + "Return", o, "return from " + joinPoint, r_p_id, r_address, props.address, c_id, time2);
+		logEvent(e_type + "Return", o, "return from " + joinPoint, r_p_id, r_address, props.address, c_id, time2, status);
 	}
 
 	void logEvent(Object target, String a_id) {
@@ -381,6 +392,39 @@ public aspect AspectLogger {
 		this.logger.log(this.logKey, traceKey, eventKey, CONVERSATION_ID_KEY, c_id);
 		this.logger.log(this.logKey, traceKey, eventKey, EVENT_TIME_KEY, sdf.format(time));
 	}
+	
+	void logEvent(String e_type, Object target, String a_id, String r_p_id, String source, String dest, String c_id,
+			Date time, int status) {
+		String r_id = target.getClass().getName();
+		Integer l_p_id = target.hashCode();
+		
+		System.out.println(EVENT_TYPE_KEY + "=" + e_type);
+		System.out.println(RESOURCE_ID_KEY + "=" + r_id);
+		System.out.println(ACTIVITY_ID_KEY + "=" + a_id);
+		System.out.println(RESOURCE_INSTANCE_ID_KEY + "=" + l_p_id);
+		System.out.println(REMOTE_PROCESS_ID_KEY + "=" + r_p_id);
+		System.out.println(COMMUNICATION_SOURCE_ID_KEY + "=" + source);
+		System.out.println(COMMUNICATION_DESTINATION_ID_KEY + "=" + dest);
+		System.out.println(CONVERSATION_ID_KEY + "=" + c_id);
+		System.out.println(EVENT_TIME_KEY + "=" + sdf.format(time));
+		System.out.println("status="+status);
+		System.out.println("*************************************************");
+		
+		TraceKey traceKey = new TraceKey(r_id, l_p_id);
+		Integer eventId = logger.getNewEventID(this.logKey, traceKey);
+		EventKey eventKey = new EventKey(eventId);
+		
+		this.logger.log(this.logKey, traceKey, eventKey, EVENT_TYPE_KEY, e_type);
+		this.logger.log(this.logKey, traceKey, eventKey, RESOURCE_ID_KEY, r_id);
+		this.logger.log(this.logKey, traceKey, eventKey, ACTIVITY_ID_KEY, a_id);
+		this.logger.log(this.logKey, traceKey, eventKey, RESOURCE_INSTANCE_ID_KEY, l_p_id.toString());
+		this.logger.log(this.logKey, traceKey, eventKey, REMOTE_PROCESS_ID_KEY, r_p_id);
+		this.logger.log(this.logKey, traceKey, eventKey, COMMUNICATION_SOURCE_ID_KEY, source);
+		this.logger.log(this.logKey, traceKey, eventKey, COMMUNICATION_DESTINATION_ID_KEY, dest);
+		this.logger.log(this.logKey, traceKey, eventKey, CONVERSATION_ID_KEY, c_id);
+		this.logger.log(this.logKey, traceKey, eventKey, EVENT_TIME_KEY, sdf.format(time));
+	}
+	
 
 	void logTempEvent(Object target, String a_id, String source, String dest, String c_id) {
 		String r_id = target.getClass().getName();
@@ -410,6 +454,9 @@ public aspect AspectLogger {
 		this.logger.log(this.logKey, traceKey, eventKey, EVENT_TIME_KEY, sdf.format(new Date()));
 }
 	
+	after(Object o) : call(* *.serialization()) && this(o){
+		serialize(o.getClass().getSimpleName()+o.hashCode());
+	}
 	void serialize(String filename){
 		this.logger.serializeLog(this.logKey, filename);
 	}
