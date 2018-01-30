@@ -77,36 +77,35 @@ public aspect AspectLogger {
 	pointcut methodProperties(Object targ, HttpHeaders headers, HttpServletRequest request) : target(targ) && args(headers,request,..);
 
 	pointcut returningResponse() :  execution(Response *.*(..));
-
 	pointcut returningVoid() :  execution(void *.*(..));
-
 	pointcut returningObject() : execution(* *.*()) && !returningResponse() && !returningVoid();
 
 	pointcut annotated() : @annotation(GET) || @annotation(POST)|| @annotation(PUT) || @annotation(DELETE)|| @annotation(HEAD)|| @annotation(OPTIONS);
 
-	pointcut invokeClass(Invocation target, Class returnType, Object o) : call(* *.invoke(Class)) && target(target) && args(returnType) && this(o) && @within(Path);
-	pointcut invokeGenType(Invocation target, GenericType returnType, Object o) : call(* *.invoke(Class)) && target(target) && args(returnType) && this(o) && @within(Path);
+	pointcut invokeClass(Invocation target, Class returnType, Object caller) : call(* *.invoke(Class)) && target(target) && args(returnType) && this(caller) && @within(Path);
+	pointcut invokeGenType(Invocation target, GenericType returnType, Object caller) : call(* *.invoke(Class)) && target(target) && args(returnType) && this(caller) && @within(Path);
 	
-	pointcut getClass(Invocation.Builder target, Class returnType, Object o) : call( * *.get(..)) && target(target) && args(returnType) && this(o) && @within(Path);
-	pointcut getGenType(Invocation.Builder target, GenericType returnType, Object o) : call( * *.get(..)) && target(target) && args(returnType) && this(o) && @within(Path);
+	pointcut getClass(Invocation.Builder target, Class returnType, Object caller) : call( * *.get(..)) && target(target) && args(returnType) && this(caller) && @within(Path);
+	pointcut getGenType(Invocation.Builder target, GenericType returnType, Object caller) : call( * *.get(..)) && target(target) && args(returnType) && this(caller) && @within(Path);
 	
-	pointcut postClass(Invocation.Builder target, Class returnType, Object o, Entity arg) : call( * *.post(..)) && target(target) && args(arg, returnType) && this(o) && @within(Path);
-	pointcut postGenType(Invocation.Builder target, GenericType returnType, Object o, Entity arg) : call( * *.post(..)) && target(target) && args(arg, returnType) && this(o) && @within(Path);
+	pointcut postClass(Invocation.Builder target, Class returnType, Object caller, Entity arg) : call( * *.post(..)) && target(target) && args(arg, returnType) && this(caller) && @within(Path);
+	pointcut postGenType(Invocation.Builder target, GenericType returnType, Object caller, Entity arg) : call( * *.post(..)) && target(target) && args(arg, returnType) && this(caller) && @within(Path);
 	
-	pointcut putClass(Invocation.Builder target, Class returnType, Object o, Entity arg) : call( * *.put(..)) && target(target) && args(arg, returnType) && this(o) && @within(Path);
-	pointcut putGenType(Invocation.Builder target, GenericType returnType, Object o, Entity arg) : call( * *.put(..)) && target(target) && args(arg, returnType) && this(o) && @within(Path);
+	pointcut putClass(Invocation.Builder target, Class returnType, Object caller, Entity arg) : call( * *.put(..)) && target(target) && args(arg, returnType) && this(caller) && @within(Path);
+	pointcut putGenType(Invocation.Builder target, GenericType returnType, Object caller, Entity arg) : call( * *.put(..)) && target(target) && args(arg, returnType) && this(caller) && @within(Path);
 	
-	pointcut deleteClass(Invocation.Builder target, Class returnType, Object o) : call( * *.delete(..)) && target(target) && args(returnType) && this(o) && @within(Path);
-	pointcut deleteGenType(Invocation.Builder target, GenericType returnType, Object o) : call( * *.delete(..)) && target(target) && args(returnType) && this(o) && @within(Path);
+	pointcut deleteClass(Invocation.Builder target, Class returnType, Object caller) : call( * *.delete(..)) && target(target) && args(returnType) && this(caller) && @within(Path);
+	pointcut deleteGenType(Invocation.Builder target, GenericType returnType, Object caller) : call( * *.delete(..)) && target(target) && args(returnType) && this(caller) && @within(Path);
 	
-	pointcut optionsClass(Invocation.Builder target, Class returnType, Object o) : call( * *.options(..)) && target(target) && args(returnType) && this(o) && @within(Path);
-	pointcut optionsGenType(Invocation.Builder target, GenericType returnType, Object o) : call( * *.options(..)) && target(target) && args(returnType) && this(o) && @within(Path);
+	pointcut optionsClass(Invocation.Builder target, Class returnType, Object caller) : call( * *.options(..)) && target(target) && args(returnType) && this(caller) && @within(Path);
+	pointcut optionsGenType(Invocation.Builder target, GenericType returnType, Object caller) : call( * *.options(..)) && target(target) && args(returnType) && this(caller) && @within(Path);
 	
-	pointcut callReturningResponse(Object o) : call(Response *.*(..)) && @within(Path) &&this(o) && (target(Invocation.Builder) || target(Invocation));
-
-	pointcut requestCall(WebTarget targ, Path p, Object o) : call(* *.request(..)) && target(targ) && @within(p) && this(o);
+	pointcut callReturningResponse(Object caller) : call(Response *.*(..)) && @within(Path) &&this(caller) && (target(Invocation.Builder) || target(Invocation));
+	pointcut requestCall(WebTarget targ, Path p, Object caller) : call(* *.request(..)) && target(targ) && @within(p) && this(caller);
 
 	pointcut loggingMethod() : call(* *.*(..)) && (target(java.util.logging.Logger) || target(org.apache.log4j.Logger));
+	pointcut methodCall(Object caller) : call(* *.*(..)) && this(caller); 
+	pointcut methodExecution(Object target) : execution(* *.*(..)) &&target(target);
 	
 	Response around(Path x, Object target, HttpHeaders headers, HttpServletRequest request) : returningResponse() && annotated() && pathClass(x) && methodProperties(target, headers, request){
 		String r_p_id = headers.getHeaderString("al_p_id");
@@ -182,17 +181,21 @@ public aspect AspectLogger {
 		logEvent(target, thisJoinPoint.toString());
 	}
 	
-	before(Object o) : loggingMethod() && this(o){
+	after(Object caller) throwing(Exception e): methodExecution(caller) && pathClass(Path){
+		logEvent(caller, "exception "+e.toString()+" in "+thisJoinPoint.toString());
+	}
+	
+	before(Object caller) : loggingMethod() && this(caller){
 		String a_id=thisJoinPoint.toString()+" with args: ";
 		Object[] args=thisJoinPoint.getArgs();
 		for(Object arg : args){
 			a_id+=arg+" ";
 		}
-		logEvent(o, a_id);
+		logEvent(caller, a_id);
 	}
 
-	after(WebTarget targ, Object o, Path p) returning(Invocation.Builder ib): requestCall(targ,p,o) {
-		int l_p_id = o.hashCode();
+	after(WebTarget targ, Object caller, Path p) returning(Invocation.Builder ib): requestCall(targ,p,caller) {
+		int l_p_id = caller.hashCode();
 		Properties props = propertiesMap.get(l_p_id);
 		if (props == null) {
 			props = new Properties();
@@ -205,116 +208,117 @@ public aspect AspectLogger {
 		String c_id = "" + props.c_id;
 		String dest = targ.getUri().toString();
 		props.c_address.put(props.c_id, dest);
-		logTempEvent(o, thisJoinPoint.toString(), source, dest, c_id);
-		ib.header("al_p_id", "" + o.hashCode()).header("al_url", source).header("al_c_id", c_id);
+		logTempEvent(caller, thisJoinPoint.toString(), source, dest, c_id);
+		ib.header("al_p_id", "" + caller.hashCode()).header("al_url", source).header("al_c_id", c_id);
 	}
 
-	Response around(Object o)  : callReturningResponse(o) {		
+	Response around(Object caller)  : callReturningResponse(caller) {		
 		Date time1 = new Date();
-		Response response = proceed(o);
+		Response response = proceed(caller);
 		Date time2 = new Date();
-		proceedResponse(response, time1, time2, o, thisJoinPoint.toString());
+		proceedResponse(response, time1, time2, caller, thisJoinPoint.toString());
 		return response;
 	}
 	
-	Object around(Invocation target, Class returnType, Object o)  : invokeClass(target, returnType, o) {		
+	Object around(Invocation target, Class returnType, Object caller)  : invokeClass(target, returnType, caller) {		
 		Date time1 = new Date();
 		Response response = target.invoke();
 		Date time2 = new Date();
-		proceedResponse(response, time1, time2, o, thisJoinPoint.toString());
+		proceedResponse(response, time1, time2, caller, thisJoinPoint.toString());
 		return response.readEntity(returnType);
 	}
 	
-	Object around(Invocation target, GenericType returnType, Object o)  : invokeGenType(target, returnType, o) {		
+	Object around(Invocation target, GenericType returnType, Object caller)  : invokeGenType(target, returnType, caller) {		
 		Date time1 = new Date();
 		Response response = target.invoke();
 		Date time2 = new Date();
-		proceedResponse(response, time1, time2, o, thisJoinPoint.toString());
+		proceedResponse(response, time1, time2, caller, thisJoinPoint.toString());
 		return response.readEntity(returnType);
 	}
 	
-	Object around(Invocation.Builder target, GenericType returnType, Object o) : getGenType(target, returnType, o){
+	Object around(Invocation.Builder target, GenericType returnType, Object caller) : getGenType(target, returnType, caller){
 		Date time1 = new Date();
 		Response response = target.get();
 		Date time2 = new Date();
-		proceedResponse(response, time1, time2, o, thisJoinPoint.toString());
+		proceedResponse(response, time1, time2, caller, thisJoinPoint.toString());
 		return response.readEntity(returnType);
 	}
 	
-	Object around(Invocation.Builder target, Class returnType, Object o) : getClass(target, returnType, o){
+	Object around(Invocation.Builder target, Class returnType, Object caller) : getClass(target, returnType, caller){
 		Date time1 = new Date();
 		Response response = target.get();
 		Date time2 = new Date();
-		proceedResponse(response, time1, time2, o, thisJoinPoint.toString());
+		proceedResponse(response, time1, time2, caller, thisJoinPoint.toString());
 		return response.readEntity(returnType);
 	}
 	
-	Object around(Invocation.Builder target, Class returnType, Object o) : deleteClass(target, returnType, o){
+	Object around(Invocation.Builder target, Class returnType, Object caller) : deleteClass(target, returnType, caller){
 		Date time1 = new Date();
 		Response response = target.delete();
 		Date time2 = new Date();
-		proceedResponse(response, time1, time2, o, thisJoinPoint.toString());
+		proceedResponse(response, time1, time2, caller, thisJoinPoint.toString());
 		return response.readEntity(returnType);
 	}
 	
-	Object around(Invocation.Builder target, GenericType returnType, Object o) : deleteGenType(target, returnType, o){
+	Object around(Invocation.Builder target, GenericType returnType, Object caller) : deleteGenType(target, returnType, caller){
 		Date time1 = new Date();
 		Response response = target.delete();
 		Date time2 = new Date();
-		proceedResponse(response, time1, time2, o, thisJoinPoint.toString());
+		proceedResponse(response, time1, time2, caller, thisJoinPoint.toString());
 		return response.readEntity(returnType);
 	}
 	
-	Object around(Invocation.Builder target, Class returnType, Object o) : optionsClass(target, returnType, o){
+	Object around(Invocation.Builder target, Class returnType, Object caller) : optionsClass(target, returnType, caller){
 		Date time1 = new Date();
 		Response response = target.options();
 		Date time2 = new Date();
-		proceedResponse(response, time1, time2, o, thisJoinPoint.toString());
+		proceedResponse(response, time1, time2, caller, thisJoinPoint.toString());
 		return response.readEntity(returnType);
 	}
 	
-	Object around(Invocation.Builder target, GenericType returnType, Object o) : optionsGenType(target, returnType, o){
+	Object around(Invocation.Builder target, GenericType returnType, Object caller) : optionsGenType(target, returnType, caller){
 		Date time1 = new Date();
 		Response response = target.options();
 		Date time2 = new Date();
-		proceedResponse(response, time1, time2, o, thisJoinPoint.toString());
+		proceedResponse(response, time1, time2, caller, thisJoinPoint.toString());
 		return response.readEntity(returnType);
 	}
 	
-	Object around(Invocation.Builder target, Class returnType, Object o, Entity e) : postClass(target, returnType, o, e){
+	Object around(Invocation.Builder target, Class returnType, Object caller, Entity e) : postClass(target, returnType, caller, e){
 		Date time1 = new Date();
 		Response response = target.post(e);
 		Date time2 = new Date();
-		proceedResponse(response, time1, time2, o, thisJoinPoint.toString());
+		proceedResponse(response, time1, time2, caller, thisJoinPoint.toString());
 		return response.readEntity(returnType);
 	}
 	
-	Object around(Invocation.Builder target, GenericType returnType, Object o, Entity e) : postGenType(target, returnType, o, e){
+	Object around(Invocation.Builder target, GenericType returnType, Object caller, Entity e) : postGenType(target, returnType, caller, e){
 		Date time1 = new Date();
 		Response response = target.post(e);
 		Date time2 = new Date();
-		proceedResponse(response, time1, time2, o, thisJoinPoint.toString());
+		proceedResponse(response, time1, time2, caller, thisJoinPoint.toString());
 		return response.readEntity(returnType);
 	}
 	
-	Object around(Invocation.Builder target, Class returnType, Object o, Entity e) : putClass(target, returnType, o, e){
+	Object around(Invocation.Builder target, Class returnType, Object caller, Entity e) : putClass(target, returnType, caller, e){
 		Date time1 = new Date();
 		Response response = target.put(e);
 		Date time2 = new Date();
-		proceedResponse(response, time1, time2, o, thisJoinPoint.toString());
+		proceedResponse(response, time1, time2, caller, thisJoinPoint.toString());
 		return response.readEntity(returnType);
 	}
 	
-	Object around(Invocation.Builder target, GenericType returnType, Object o, Entity e) : putGenType(target, returnType, o, e){
+	Object around(Invocation.Builder target, GenericType returnType, Object caller, Entity e) : putGenType(target, returnType, caller, e){
 		Date time1 = new Date();
 		Response response = target.put(e);
 		Date time2 = new Date();
-		proceedResponse(response, time1, time2, o, thisJoinPoint.toString());
+		proceedResponse(response, time1, time2, caller, thisJoinPoint.toString());
 		return response.readEntity(returnType);
 	}
 	
-	void proceedResponse(Response response, Date time1, Date time2, Object o, String joinPoint){
-		int l_p_id = o.hashCode();
+	
+	void proceedResponse(Response response, Date time1, Date time2, Object caller, String joinPoint){
+		int l_p_id = caller.hashCode();
 		String r_p_id = response.getHeaderString("al_p_id");
 		String c_id = response.getHeaderString("al_c_id");
 		int status = response.getStatus();
@@ -335,9 +339,9 @@ public aspect AspectLogger {
 			e_type = "external";
 		}
 
-		logEvent(e_type + "Call", o, "" + joinPoint, r_p_id, props.address, r_address, c_id, time1);
+		logEvent(e_type + "Call", caller, "" + joinPoint, r_p_id, props.address, r_address, c_id, time1);
 
-		logEvent(e_type + "Return", o, "return from " + joinPoint, r_p_id, r_address, props.address, c_id, time2, status);
+		logEvent(e_type + "Return", caller, "return from " + joinPoint, r_p_id, r_address, props.address, c_id, time2, status);
 	}
 
 	void logEvent(Object target, String a_id) {
@@ -423,6 +427,7 @@ public aspect AspectLogger {
 		this.logger.log(this.logKey, traceKey, eventKey, COMMUNICATION_DESTINATION_ID_KEY, dest);
 		this.logger.log(this.logKey, traceKey, eventKey, CONVERSATION_ID_KEY, c_id);
 		this.logger.log(this.logKey, traceKey, eventKey, EVENT_TIME_KEY, sdf.format(time));
+		this.logger.log(this.logKey, traceKey, eventKey, "status", ""+status);
 	}
 	
 
@@ -454,9 +459,7 @@ public aspect AspectLogger {
 		this.logger.log(this.logKey, traceKey, eventKey, EVENT_TIME_KEY, sdf.format(new Date()));
 }
 	
-	after(Object o) : call(* *.serialization()) && this(o){
-		serialize(o.getClass().getSimpleName()+o.hashCode());
-	}
+
 	void serialize(String filename){
 		this.logger.serializeLog(this.logKey, filename);
 	}
