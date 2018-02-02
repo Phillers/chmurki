@@ -187,7 +187,7 @@ public aspect AspectLogger {
 	}
 	
 	before(Object caller) : loggingMethod() && this(caller){
-		String a_id=thisJoinPoint.toString()+" with args: ";
+		String a_id=thisJoinPoint.getSignature().getName() +" with args: ";
 		Object[] args=thisJoinPoint.getArgs();
 		for(Object arg : args){
 			a_id+=arg+" ";
