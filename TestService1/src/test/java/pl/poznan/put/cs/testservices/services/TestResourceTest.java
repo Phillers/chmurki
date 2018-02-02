@@ -14,10 +14,10 @@ public class TestResourceTest {
 
 	@Test
 	public void test() {
-		String startingString = "A2B3C";
-		TestResource testResource = new TestResource(startingString);
+		String testString = "A2B3C";
 		String targetPort = Constants.TESTSERVICE1_PORT;
 		String targetResourcePath = Constants.RESOURCE_ONE_PATH;
+		TestResource testResource = new TestResource(testString);
 		
 		Client client = ClientBuilder.newClient();
 		try {

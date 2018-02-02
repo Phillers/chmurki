@@ -1,5 +1,8 @@
 package pl.poznan.put.cs.testservices.services;
 
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
@@ -14,9 +17,6 @@ import javax.ws.rs.core.Response;
 
 import pl.poznan.put.cs.testservices.domain.TestResource;
 import static pl.poznan.put.cs.testservices.services.Constants.*;
-
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 @Path(RESOURCE_ONE_PATH)
 public class ResourceOne {
@@ -59,11 +59,13 @@ public class ResourceOne {
 				targetResourcePath = RESOURCE_C_PATH;
 				break;
 			default:
+				targetPort = TESTSERVICE1_PORT;
+				targetResourcePath = RESOURCE_TWO_PATH;
 				break;
 			}
 			Client client = ClientBuilder.newClient();
 			try {
-				Response response = client.target("http://localhost:" + targetPort + Constants.APPLICATION_PATH + targetResourcePath)
+				Response response = client.target(RequestHelper.prepareRequestString(targetPort, targetResourcePath))
 						.request().post(Entity.entity(testResource, MediaType.APPLICATION_JSON));
 				response.close();
 			} finally {

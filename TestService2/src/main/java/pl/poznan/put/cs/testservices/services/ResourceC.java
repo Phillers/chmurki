@@ -59,6 +59,8 @@ public class ResourceC {
 				targetResourcePath = RESOURCE_B_PATH;
 				break;
 			default:
+				targetPort = TESTSERVICE1_PORT;
+				targetResourcePath = RESOURCE_ONE_PATH;
 				break;
 			}
 			Client client = ClientBuilder.newClient();

@@ -1,7 +1,7 @@
 package pl.poznan.put.cs.testservices.services;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
@@ -59,6 +59,8 @@ public class ResourceThree {
 				targetResourcePath = RESOURCE_C_PATH;
 				break;
 			default:
+				targetPort = TESTSERVICE1_PORT;
+				targetResourcePath = RESOURCE_ONE_PATH;
 				break;
 			}
 			Client client = ClientBuilder.newClient();

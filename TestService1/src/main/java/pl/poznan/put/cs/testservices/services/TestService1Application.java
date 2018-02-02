@@ -11,6 +11,7 @@ public class TestService1Application extends Application {
 	private final Set<Class<?>> classes = new HashSet<Class<?>>();
 	
 	public TestService1Application() {
+		this.classes.add(ResourceStartTest.class);
 		this.classes.add(ResourceOne.class);
 		this.classes.add(ResourceTwo.class);
 		this.classes.add(ResourceThree.class);
