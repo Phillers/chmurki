@@ -181,7 +181,7 @@ public aspect AspectLogger {
 		logEvent(target, thisJoinPoint.toString());
 	}
 	
-	after(Object caller) throwing(Exception e): methodExecution(caller) && pathClass(Path){
+	after(Object caller) throwing(Exception e): methodCall(caller) && pathClass(Path){
 		logEvent(caller, "exception "+e.toString()+" in "+thisJoinPoint.toString());
 	}
 	
