@@ -103,9 +103,8 @@ public aspect AspectLogger {
 	pointcut callReturningResponse(Object caller) : call(Response *.*(..)) && @within(Path) &&this(caller) && (target(Invocation.Builder) || target(Invocation));
 	pointcut requestCall(WebTarget targ, Path p, Object caller) : call(* *.request(..)) && target(targ) && @within(p) && this(caller);
 
-	pointcut loggingMethod() : call(* *.*(..)) && target(java.util.logging.Logger);
-	pointcut loggingMethod2() : call(* *.*(..)) && target(org.apache.log4j.Logger);
-	
+	pointcut loggingMethod() : call(* *.*(..)) && (target(java.util.logging.Logger) || target(org.apache.log4j.Logger));
+		
 	pointcut methodCall(Object caller) : call(* *.*(..)) && this(caller); 
 	pointcut methodExecution(Object target) : execution(* *.*(..)) &&target(target);
 	
@@ -196,15 +195,6 @@ public aspect AspectLogger {
 		logEvent(caller, a_id);
 	}
 
-	before(Object caller) : loggingMethod2() && this(caller){
-		String a_id=thisJoinPoint.toString()+" with args: ";
-		Object[] args=thisJoinPoint.getArgs();
-		for(Object arg : args){
-			a_id+=arg+" ";
-		}
-		logEvent(caller, a_id);
-	}
-	
 	after(WebTarget targ, Object caller, Path p) returning(Invocation.Builder ib): requestCall(targ,p,caller) {
 		int l_p_id = caller.hashCode();
 		Properties props = propertiesMap.get(l_p_id);
