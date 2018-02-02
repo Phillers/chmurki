@@ -23,4 +23,8 @@ public final class RequestHelper {
 			client.close();
 		}
 	}
+	
+	public static String prepareRequestString(String targetPort, String targetResourcePath) {
+		return "http://localhost:" + targetPort + Constants.APPLICATION_PATH + targetResourcePath;
+	}
 }

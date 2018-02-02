@@ -64,7 +64,7 @@ public class ResourceB {
 			}
 			Client client = ClientBuilder.newClient();
 			try {
-				Response response = client.target("http://localhost:" + targetPort + Constants.APPLICATION_PATH + targetResourcePath)
+				Response response = client.target(RequestHelper.prepareRequestString(targetPort, targetResourcePath))
 						.request().post(Entity.entity(testResource, MediaType.APPLICATION_JSON));
 				response.close();
 			} finally {

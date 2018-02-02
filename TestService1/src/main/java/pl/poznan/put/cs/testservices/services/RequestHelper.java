@@ -13,14 +13,18 @@ public final class RequestHelper {
 		
 	}
 	
-	public static void sendRequest(String targetPort, String targetResourcePath, TestResource testResource) {
+	public static void sendRequest(String port, String resourcePath, TestResource testResource) {
 		Client client = ClientBuilder.newClient();
 		try {
-			Response response = client.target("http://localhost:" + targetPort + Constants.APPLICATION_PATH + targetResourcePath)
+			Response response = client.target("http://localhost:" + port + Constants.APPLICATION_PATH + resourcePath)
 					.request().post(Entity.entity(testResource, MediaType.APPLICATION_JSON));
 			response.close();
 		} finally {
 			client.close();
 		}
+	}
+	
+	public static String prepareRequestString(String targetPort, String targetResourcePath) {
+		return "http://localhost:" + targetPort + Constants.APPLICATION_PATH + targetResourcePath;
 	}
 }
