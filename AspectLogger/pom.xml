@@ -76,7 +76,7 @@
 						<!-- Execution for installation of local Spex JAR -->
 						<execution>
 							<id>install-spex</id>
-							<phase>process-resources</phase>
+							<phase>initialize</phase>
 							<configuration>
 								<file>${basedir}/lib/Spex.jar</file>
 								<repositoryLayout>default</repositoryLayout>
@@ -93,7 +93,7 @@
 						<!-- Execution for installation of local OpenXES JAR -->
 						<execution>
 							<id>install-openxes</id>
-							<phase>process-resources</phase>
+							<phase>initialize</phase>
 							<configuration>
 								<file>${basedir}/lib/OpenXES-20171212.jar</file>
 								<repositoryLayout>default</repositoryLayout>
