@@ -15,7 +15,7 @@ import org.deckfour.xes.model.impl.XAttributeMapImpl;
 import org.deckfour.xes.model.impl.XLogImpl;
 import org.deckfour.xes.out.XesXmlSerializer;
 
-class LogMapper {
+final class LogMapper {
 	private XLog log;
 	private Map<TraceKey, TraceMapper> traceMappers;
 	

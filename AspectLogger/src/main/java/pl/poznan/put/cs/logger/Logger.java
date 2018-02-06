@@ -3,7 +3,7 @@ package pl.poznan.put.cs.logger;
 import java.util.HashMap;
 import java.util.Map;
 
-public class Logger {
+public final class Logger {
 	private String baseOutputPath;
 	private Map<LogKey, LogMapper> logMappers;
 	

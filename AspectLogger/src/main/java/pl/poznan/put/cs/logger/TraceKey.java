@@ -3,8 +3,6 @@ package pl.poznan.put.cs.logger;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
-
-
 public final class TraceKey {
 	private static final int HASHCODE_PRIME1 = 113;
 	private static final int HASHCODE_PRIME2 = 211;

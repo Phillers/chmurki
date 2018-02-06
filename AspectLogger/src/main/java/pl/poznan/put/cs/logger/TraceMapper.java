@@ -12,7 +12,7 @@ import org.deckfour.xes.model.impl.XAttributeMapImpl;
 import org.deckfour.xes.model.impl.XEventImpl;
 import org.deckfour.xes.model.impl.XTraceImpl;
 
-class TraceMapper {
+final class TraceMapper {
 	private XTrace trace;
 	private Map<EventKey, XEvent> eventMap;
 	private int uniqueId;
